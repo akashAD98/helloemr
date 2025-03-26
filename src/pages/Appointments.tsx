@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { Calendar, CalendarIcon, Clock, PlusCircle } from "lucide-react";
+import { Calendar, CalendarIcon, Clock, PlusCircle, CheckCircle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -18,81 +20,70 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-
-// Mock appointments data
-const appointments = [
-  {
-    id: "a1",
-    patientName: "Jane Doe",
-    patientId: "p1",
-    date: "2024-01-17",
-    time: "10:00 AM",
-    duration: "30 minutes",
-    type: "Follow-up",
-    status: "booked",
-    provider: "Dr. Jennifer Davis",
-  },
-  {
-    id: "a2",
-    patientName: "John Smith",
-    patientId: "p2",
-    date: "2024-01-17",
-    time: "11:00 AM",
-    duration: "45 minutes",
-    type: "New Patient",
-    status: "booked",
-    provider: "Dr. Jennifer Davis",
-  },
-  {
-    id: "a3",
-    patientName: "Alex Johnson",
-    patientId: "p3",
-    date: "2024-01-17",
-    time: "1:30 PM",
-    duration: "30 minutes",
-    type: "Follow-up",
-    status: "booked",
-    provider: "Dr. Michael Wong",
-  },
-  {
-    id: "a4",
-    patientName: "Maria Garcia",
-    patientId: "p4",
-    date: "2024-01-18",
-    time: "9:00 AM",
-    duration: "60 minutes",
-    type: "Annual Physical",
-    status: "pending",
-    provider: "Dr. Sarah Johnson",
-  },
-  {
-    id: "a5",
-    patientName: "Robert Chen",
-    patientId: "p5",
-    date: "2024-01-18",
-    time: "2:00 PM",
-    duration: "30 minutes",
-    type: "Follow-up",
-    status: "pending",
-    provider: "Dr. Jennifer Davis",
-  },
-];
+import { AppointmentFormDialog } from "@/components/appointments/AppointmentFormDialog";
+import { appointments, patients, Appointment } from "@/data/mockData";
 
 export default function Appointments() {
   const [date, setDate] = useState<Date>(new Date());
   const [provider, setProvider] = useState<string>("all");
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(appointments);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const formattedDate = format(date, "yyyy-MM-dd");
   
   // Filter appointments based on selected date and provider
-  const filteredAppointments = appointments.filter(appointment => {
+  const filteredAppointments = localAppointments.filter(appointment => {
     const matchesDate = appointment.date === formattedDate;
     const matchesProvider = provider === "all" || appointment.provider.includes(provider);
     return matchesDate && matchesProvider;
   });
+
+  // Handle appointment creation
+  const handleCreateAppointment = (formData: any) => {
+    const patientData = patients.find(p => p.id === formData.patientId);
+    
+    if (!patientData) {
+      toast.error("Patient not found");
+      return;
+    }
+    
+    const newAppointment: Appointment = {
+      id: `a${localAppointments.length + 1}`,
+      patientId: formData.patientId,
+      patientName: patientData.name,
+      date: formData.date,
+      time: formData.time,
+      duration: formData.duration,
+      type: formData.type,
+      status: "pending",
+      provider: formData.provider,
+      reasonForVisit: formData.reasonForVisit
+    };
+    
+    setLocalAppointments([...localAppointments, newAppointment]);
+    toast.success(`Appointment scheduled for ${patientData.name}`);
+  };
+
+  // Handle status change
+  const handleStatusChange = (appointmentId: string, newStatus: 'booked' | 'pending' | 'cancelled' | 'completed') => {
+    setLocalAppointments(prevAppointments => 
+      prevAppointments.map(appointment => 
+        appointment.id === appointmentId 
+          ? { ...appointment, status: newStatus }
+          : appointment
+      )
+    );
+    
+    const appointment = localAppointments.find(a => a.id === appointmentId);
+    if (appointment) {
+      const statusText = newStatus === 'completed' ? 'completed' : 
+                         newStatus === 'cancelled' ? 'cancelled' : 
+                         'updated';
+      toast.success(`Appointment ${statusText} for ${appointment.patientName}`);
+    }
+  };
 
   return (
     <PageContainer>
@@ -101,7 +92,7 @@ export default function Appointments() {
           title="Appointments" 
           description="Manage your schedule"
           actions={
-            <Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Appointment
             </Button>
@@ -211,8 +202,13 @@ export default function Appointments() {
                             <div>
                               <h3 className="font-medium">{appointment.patientName}</h3>
                               <div className="text-sm text-muted-foreground">{appointment.type}</div>
+                              {appointment.reasonForVisit && (
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  Reason: {appointment.reasonForVisit}
+                                </div>
+                              )}
                             </div>
-                            <StatusBadge status={appointment.status as any} />
+                            <StatusBadge status={appointment.status} />
                           </div>
                           
                           <div className="mt-2 text-xs text-muted-foreground">
@@ -221,10 +217,26 @@ export default function Appointments() {
                         </div>
                         
                         <div className="ml-4 flex items-center">
-                          <Button variant="ghost" size="sm">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>Check in</span>
-                          </Button>
+                          {appointment.status === "pending" && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleStatusChange(appointment.id, "booked")}
+                            >
+                              <Clock className="h-4 w-4 mr-1" />
+                              <span>Confirm</span>
+                            </Button>
+                          )}
+                          {appointment.status === "booked" && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleStatusChange(appointment.id, "completed")}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              <span>Complete</span>
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -234,7 +246,10 @@ export default function Appointments() {
                     <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
                     <h3 className="text-lg font-medium">No appointments scheduled</h3>
                     <p className="mt-1">There are no appointments scheduled for this date.</p>
-                    <Button className="mt-4">
+                    <Button 
+                      className="mt-4"
+                      onClick={() => setIsDialogOpen(true)}
+                    >
                       <PlusCircle className="mr-2 h-4 w-4" />
                       Add Appointment
                     </Button>
@@ -245,6 +260,13 @@ export default function Appointments() {
           </div>
         </div>
       </div>
+      
+      <AppointmentFormDialog
+        open={isDialogOpen}
+        selectedDate={date}
+        onOpenChange={setIsDialogOpen}
+        onSubmit={handleCreateAppointment}
+      />
     </PageContainer>
   );
 }

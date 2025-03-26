@@ -1,14 +1,16 @@
 
 import { cn } from "@/lib/utils";
+import { ReactNode } from "react";
 
-type StatusType = 'pending' | 'overdue' | 'booked' | 'completed' | 'unassigned';
+export type StatusType = 'pending' | 'overdue' | 'booked' | 'completed' | 'unassigned' | 'cancelled';
 
 interface StatusBadgeProps {
   status: StatusType;
   className?: string;
+  children?: ReactNode;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, className, children }: StatusBadgeProps) {
   const getStatusClass = (status: StatusType) => {
     switch (status.toLowerCase()) {
       case 'pending':
@@ -19,6 +21,8 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-gray-300 text-gray-800';
       case 'unassigned':
       default:
         return 'bg-gray-100 text-gray-800';
@@ -33,7 +37,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
         className
       )}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {children || status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 }
