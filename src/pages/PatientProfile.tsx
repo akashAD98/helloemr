@@ -26,12 +26,23 @@ import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
 import { AllergiesTab } from "@/components/patient-details/AllergiesTab";
 import { LabsTab } from "@/components/patient-details/LabsTab";
 import { AudioNoteRecorder } from "@/components/patient-details/AudioNoteRecorder";
-import { VisitsTab } from "@/components/patient-details/VisitsTab";
+import { VisitsTab, Visit } from "@/components/patient-details/VisitsTab";
 import { PatientSummary } from "@/components/patient-details/PatientSummary";
 import { useToast } from "@/components/ui/use-toast";
 
+// Extended note interface to include summary
+interface Note {
+  id: string;
+  patientId: string;
+  date: string;
+  content: string;
+  author: string;
+  audioRecording: string | null;
+  summary?: string;
+}
+
 // Example mock data for visits
-const mockVisits = [
+const mockVisits: Visit[] = [
   {
     id: "visit1",
     patientId: "p7",
@@ -92,8 +103,8 @@ export default function PatientProfile() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
-  const [notes, setNotes] = useState(patientNotes);
-  const [visits, setVisits] = useState(mockVisits.filter(v => v.patientId === id));
+  const [notes, setNotes] = useState<Note[]>(patientNotes as Note[]);
+  const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
   
   const patient = patients.find(p => p.id === id);
   const patientTasks = tasks.filter(t => t.patientId === id);
@@ -134,14 +145,14 @@ export default function PatientProfile() {
     visitId?: string,
     summary?: string
   }) => {
-    const newNote = {
+    const newNote: Note = {
       id: `note${notes.length + 1}`,
       patientId: id || "",
       date: new Date().toLocaleDateString(),
       content: note.text,
       author: "Dr. Sharma",
       audioRecording: note.audioUrl || null,
-      summary: note.summary || null
+      summary: note.summary
     };
     
     setNotes([newNote, ...notes]);
@@ -153,7 +164,7 @@ export default function PatientProfile() {
           ? { 
               ...visit, 
               transcript: note.text, 
-              audioRecording: note.audioUrl || visit.audioRecording 
+              audioRecording: note.audioUrl 
             } 
           : visit
       ));

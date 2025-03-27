@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 
-interface VisitMedication {
+export interface VisitMedication {
   id: string;
   name: string;
   dosage: string;
@@ -26,8 +26,9 @@ interface VisitMedication {
   notes?: string;
 }
 
-interface Visit {
+export interface Visit {
   id: string;
+  patientId: string;
   date: string;
   reason: string;
   provider: string;
