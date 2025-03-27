@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
-export type StatusType = 'pending' | 'overdue' | 'booked' | 'completed' | 'unassigned' | 'cancelled';
+export type StatusType = 'pending' | 'overdue' | 'booked' | 'completed' | 'unassigned' | 'cancelled' | 'high-risk' | 'medium-risk' | 'low-risk';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -23,6 +23,12 @@ export function StatusBadge({ status, className, children }: StatusBadgeProps) {
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-gray-300 text-gray-800';
+      case 'high-risk':
+        return 'bg-red-100 text-red-800';
+      case 'medium-risk':
+        return 'bg-amber-100 text-amber-800';
+      case 'low-risk':
+        return 'bg-green-100 text-green-800';
       case 'unassigned':
       default:
         return 'bg-gray-100 text-gray-800';

@@ -11,6 +11,7 @@ import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import AIAnalytics from "./pages/AIAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/patients" element={<Patients />} />
             <Route path="/patients/:id" element={<PatientProfile />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/ai-analytics" element={<AIAnalytics />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
