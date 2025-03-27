@@ -14,7 +14,7 @@ interface Problem {
   id: string;
   name: string;
   dateIdentified: string;
-  status: "active" | "resolved" | "chronic";
+  status: string; // Changed from '"active" | "resolved" | "chronic"' to string
   notes: string;
 }
 
@@ -23,6 +23,16 @@ interface ProblemsTabProps {
 }
 
 export function ProblemsTab({ problems }: ProblemsTabProps) {
+  // Helper function to determine status badge type
+  const getStatusBadgeType = (status: string) => {
+    switch(status) {
+      case "active": return "high-risk";
+      case "chronic": return "medium-risk";
+      case "resolved": return "completed";
+      default: return "pending";
+    }
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -44,8 +54,7 @@ export function ProblemsTab({ problems }: ProblemsTabProps) {
                   <TableCell>{problem.dateIdentified}</TableCell>
                   <TableCell>
                     <StatusBadge 
-                      status={problem.status === "active" ? "high-risk" : 
-                             problem.status === "chronic" ? "medium-risk" : "completed"}
+                      status={getStatusBadgeType(problem.status)}
                     >
                       {problem.status.charAt(0).toUpperCase() + problem.status.slice(1)}
                     </StatusBadge>

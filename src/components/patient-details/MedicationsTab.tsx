@@ -16,7 +16,7 @@ interface Medication {
   dosage: string;
   frequency: string;
   startDate: string;
-  status: "active" | "discontinued" | "on-hold";
+  status: string; // Changed from '"active" | "discontinued" | "on-hold"' to string
 }
 
 interface MedicationsTabProps {
@@ -24,6 +24,22 @@ interface MedicationsTabProps {
 }
 
 export function MedicationsTab({ medications }: MedicationsTabProps) {
+  // Helper function to determine status badge type
+  const getStatusBadgeType = (status: string) => {
+    switch(status) {
+      case "active": return "completed";
+      case "on-hold": return "pending";
+      case "discontinued": return "cancelled";
+      default: return "pending";
+    }
+  };
+  
+  // Helper function to format the status display
+  const formatStatusDisplay = (status: string) => {
+    if (status === "on-hold") return "On Hold";
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
   return (
     <Card>
       <CardContent className="p-6">
@@ -49,11 +65,9 @@ export function MedicationsTab({ medications }: MedicationsTabProps) {
                   <TableCell>{medication.startDate}</TableCell>
                   <TableCell>
                     <StatusBadge 
-                      status={medication.status === "active" ? "completed" : 
-                             medication.status === "on-hold" ? "pending" : "cancelled"}
+                      status={getStatusBadgeType(medication.status)}
                     >
-                      {medication.status === "on-hold" ? "On Hold" : 
-                       medication.status.charAt(0).toUpperCase() + medication.status.slice(1)}
+                      {formatStatusDisplay(medication.status)}
                     </StatusBadge>
                   </TableCell>
                 </TableRow>
