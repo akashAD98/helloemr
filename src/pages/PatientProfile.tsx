@@ -26,9 +26,10 @@ import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
 import { AllergiesTab } from "@/components/patient-details/AllergiesTab";
 import { LabsTab } from "@/components/patient-details/LabsTab";
 import { AudioNoteRecorder } from "@/components/patient-details/AudioNoteRecorder";
-import { VisitsTab, Visit } from "@/components/patient-details/VisitsTab";
+import { VisitsTab, Visit, ExamFindings } from "@/components/patient-details/VisitsTab";
 import { PatientSummary } from "@/components/patient-details/PatientSummary";
-import { useToast } from "@/components/ui/use-toast";
+import { MedicalHistorySection } from "@/components/patient-details/MedicalHistorySection";
+import { useToast } from "@/hooks/use-toast";
 
 // Extended note interface to include summary
 interface Note {
@@ -41,7 +42,7 @@ interface Note {
   summary?: string;
 }
 
-// Example mock data for visits
+// Example mock data for visits with enhanced exam details
 const mockVisits: Visit[] = [
   {
     id: "visit1",
@@ -96,6 +97,46 @@ const mockVisits: Visit[] = [
       }
     ],
     transcript: "Patient reports occasional headaches in the morning. Blood pressure readings at home have been ranging from 135/85 to 145/90. Patient has been compliant with medication but admits to inconsistent exercise routine due to work schedule. Discussed importance of regular physical activity and strategies to incorporate it into daily routine."
+  },
+  {
+    id: "visit3",
+    patientId: "p7",
+    date: "Apr 22, 2024",
+    reason: "Comprehensive Eye Exam",
+    provider: "Dr. Smith",
+    status: "in-session",
+    examFindings: {
+      subjective: "Blurry vision in the right eye for the past two weeks, particularly noticeable when reading and using a computer. Mild eye strain and occasional headaches. No pain or discharge noted.",
+      objective: "Visual acuity testing shows reduced acuity in right eye. No signs of infection or inflammation. Fundus examination normal.",
+      assessment: "Mild refractive error change, likely due to extended computer use."
+    },
+    vitalSigns: {
+      visionOD: "20/40",
+      visionOS: "20/20",
+      visionCorrection: "+1.75 D for both eyes (bifocals)",
+      intraocularPressure: "16 mmHg"
+    }
+  }
+];
+
+// Example medical history conditions
+const mockMedicalHistory = [
+  {
+    id: "cond1",
+    condition: "Hypertension",
+    status: "well-controlled on lisinopril",
+    medications: ["Lisinopril 10mg daily"]
+  },
+  {
+    id: "cond2",
+    condition: "Hyperlipidemia",
+    status: "managed with atorvastatin",
+    medications: ["Atorvastatin 20mg daily"]
+  },
+  {
+    id: "cond3",
+    condition: "No history of diabetes, cardiac disease, or other systemic issues",
+    status: ""
   }
 ];
 
@@ -105,6 +146,7 @@ export default function PatientProfile() {
   const { toast } = useToast();
   const [notes, setNotes] = useState<Note[]>(patientNotes as Note[]);
   const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
+  const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
   
   const patient = patients.find(p => p.id === id);
   const patientTasks = tasks.filter(t => t.patientId === id);
@@ -183,6 +225,20 @@ export default function PatientProfile() {
       description: "This would open a form to add a new visit.",
     });
   };
+  
+  const handleEditVisit = (visitId: string) => {
+    toast({
+      title: "Edit Visit",
+      description: `This would open a form to edit visit ${visitId}.`,
+    });
+  };
+  
+  const handleEditMedicalHistory = () => {
+    toast({
+      title: "Edit Medical History",
+      description: "This would open a form to edit the patient's medical history.",
+    });
+  };
 
   // Calculate summary stats
   const activeProblemsCount = problems.filter(p => p.status === "active").length;
@@ -193,6 +249,9 @@ export default function PatientProfile() {
   const recentSummary = visits.length > 0 
     ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].summary 
     : undefined;
+  
+  // Get current visit if in session
+  const currentVisit = visits.find(v => v.status.toLowerCase() === "in-session");
 
   return (
     <PageContainer>
@@ -216,6 +275,25 @@ export default function PatientProfile() {
             </div>
           }
         />
+
+        {/* Current Visit Alert - shown if patient has an in-session visit */}
+        {currentVisit && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-pulse">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-medium text-blue-800">{currentVisit.reason} - In Session</h3>
+                <p className="text-sm text-blue-700">Current provider: {currentVisit.provider}</p>
+              </div>
+              <Button 
+                variant="outline" 
+                className="bg-white text-blue-700 border-blue-300 hover:bg-blue-50"
+                onClick={() => handleEditVisit(currentVisit.id)}
+              >
+                View Details
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
@@ -308,6 +386,13 @@ export default function PatientProfile() {
               </TabsList>
               
               <TabsContent value="overview" className="space-y-6 mt-0">
+                {/* Medical History */}
+                <MedicalHistorySection 
+                  patientId={id || ""}
+                  conditions={medicalHistory}
+                  onEdit={handleEditMedicalHistory}
+                />
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {patientVitals.slice(0, 3).map(vital => (
                     <VitalCard
@@ -392,7 +477,11 @@ export default function PatientProfile() {
               </TabsContent>
               
               <TabsContent value="visits">
-                <VisitsTab visits={visits} onAddVisit={handleAddVisit} />
+                <VisitsTab 
+                  visits={visits} 
+                  onAddVisit={handleAddVisit} 
+                  onEditVisit={handleEditVisit}
+                />
               </TabsContent>
               
               <TabsContent value="problems">
