@@ -11,19 +11,89 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { TaskCard } from "@/components/common/TaskCard";
 import { VitalCard } from "@/components/common/VitalCard";
 import { ExternalLink, FileText, MessageCircle, Phone } from "lucide-react";
-import { patients, tasks, vitals, patientProblems, patientMedications, patientAllergies, patientLabResults, patientNotes } from "@/data/mockData";
+import { 
+  patients, 
+  tasks, 
+  vitals, 
+  patientProblems, 
+  patientMedications, 
+  patientAllergies, 
+  patientLabResults, 
+  patientNotes 
+} from "@/data/mockData";
 import { ProblemsTab } from "@/components/patient-details/ProblemsTab";
 import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
 import { AllergiesTab } from "@/components/patient-details/AllergiesTab";
 import { LabsTab } from "@/components/patient-details/LabsTab";
 import { AudioNoteRecorder } from "@/components/patient-details/AudioNoteRecorder";
+import { VisitsTab } from "@/components/patient-details/VisitsTab";
+import { PatientSummary } from "@/components/patient-details/PatientSummary";
 import { useToast } from "@/components/ui/use-toast";
+
+// Example mock data for visits
+const mockVisits = [
+  {
+    id: "visit1",
+    patientId: "p7",
+    date: "Apr 12, 2024",
+    reason: "Annual Check-up",
+    provider: "Dr. Sharma",
+    status: "completed",
+    summary: "Patient is in good health overall. Blood pressure is slightly elevated but not concerning. Recommended continued exercise and healthy diet.",
+    vitalSigns: {
+      bloodPressure: "130/85",
+      heartRate: "72 bpm",
+      temperature: "98.6°F",
+      respiratoryRate: "16 bpm",
+      oxygenSaturation: "98%"
+    },
+    medications: [
+      {
+        id: "med1",
+        name: "Lisinopril",
+        dosage: "10mg",
+        frequency: "Once daily"
+      },
+      {
+        id: "med2",
+        name: "Aspirin",
+        dosage: "81mg",
+        frequency: "Once daily"
+      }
+    ]
+  },
+  {
+    id: "visit2",
+    patientId: "p7",
+    date: "Jan 15, 2024",
+    reason: "Hypertension Follow-up",
+    provider: "Dr. Patel",
+    status: "completed",
+    summary: "Patient's blood pressure remains elevated. Increased Lisinopril dosage from 5mg to 10mg. Patient to monitor BP daily and report if exceeding 140/90.",
+    vitalSigns: {
+      bloodPressure: "142/88",
+      heartRate: "78 bpm",
+      temperature: "98.4°F",
+      oxygenSaturation: "97%"
+    },
+    medications: [
+      {
+        id: "med3",
+        name: "Lisinopril",
+        dosage: "5mg increased to 10mg",
+        frequency: "Once daily"
+      }
+    ],
+    transcript: "Patient reports occasional headaches in the morning. Blood pressure readings at home have been ranging from 135/85 to 145/90. Patient has been compliant with medication but admits to inconsistent exercise routine due to work schedule. Discussed importance of regular physical activity and strategies to incorporate it into daily routine."
+  }
+];
 
 export default function PatientProfile() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
   const [notes, setNotes] = useState(patientNotes);
+  const [visits, setVisits] = useState(mockVisits.filter(v => v.patientId === id));
   
   const patient = patients.find(p => p.id === id);
   const patientTasks = tasks.filter(t => t.patientId === id);
@@ -58,23 +128,60 @@ export default function PatientProfile() {
     // In a real application, you would upload this file to a server
   };
   
-  const handleSaveNote = (note: { text: string, audioUrl?: string }) => {
+  const handleSaveNote = (note: { 
+    text: string, 
+    audioUrl?: string, 
+    visitId?: string,
+    summary?: string
+  }) => {
     const newNote = {
       id: `note${notes.length + 1}`,
       patientId: id || "",
       date: new Date().toLocaleDateString(),
       content: note.text,
       author: "Dr. Sharma",
-      audioRecording: note.audioUrl || null
+      audioRecording: note.audioUrl || null,
+      summary: note.summary || null
     };
     
     setNotes([newNote, ...notes]);
+    
+    // If this note is associated with a visit, update that visit
+    if (note.visitId) {
+      setVisits(visits.map(visit => 
+        visit.id === note.visitId 
+          ? { 
+              ...visit, 
+              transcript: note.text, 
+              audioRecording: note.audioUrl || visit.audioRecording 
+            } 
+          : visit
+      ));
+    }
     
     toast({
       title: "Note Saved",
       description: "Your voice note has been transcribed and saved.",
     });
   };
+
+  const handleAddVisit = () => {
+    // This would open a modal in a real application
+    toast({
+      title: "Add Visit",
+      description: "This would open a form to add a new visit.",
+    });
+  };
+
+  // Calculate summary stats
+  const activeProblemsCount = problems.filter(p => p.status === "active").length;
+  const activeMedicationsCount = medications.filter(m => m.status === "active").length;
+  const lastVisitDate = visits.length > 0 
+    ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date 
+    : undefined;
+  const recentSummary = visits.length > 0 
+    ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].summary 
+    : undefined;
 
   return (
     <PageContainer>
@@ -164,13 +271,25 @@ export default function PatientProfile() {
           </div>
           
           <div className="md:col-span-2 space-y-6">
+            {/* Patient Summary at the top */}
+            <PatientSummary 
+              patientId={id || ""}
+              lastVisitDate={lastVisitDate}
+              activeProblems={activeProblemsCount}
+              activeMedications={activeMedicationsCount}
+              allergiesCount={allergies.length}
+              recentSummary={recentSummary}
+              nextAppointment="May 15, 2024 at 10:30 AM with Dr. Sharma"
+            />
+          
             <Tabs 
               defaultValue="overview" 
               className="animate-fadeIn"
               onValueChange={setActiveTab}
             >
-              <TabsList className="grid grid-cols-5 mb-6">
+              <TabsList className="grid grid-cols-6 mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="visits">Visits</TabsTrigger>
                 <TabsTrigger value="problems">Problems</TabsTrigger>
                 <TabsTrigger value="medications">Medications</TabsTrigger>
                 <TabsTrigger value="allergies">Allergies</TabsTrigger>
@@ -208,6 +327,11 @@ export default function PatientProfile() {
                             <h4 className="font-medium">{note.author}</h4>
                             <span className="text-xs text-muted-foreground">{note.date}</span>
                           </div>
+                          {note.summary && (
+                            <div className="mb-2 text-sm font-medium bg-blue-50 text-blue-800 p-2 rounded">
+                              Summary: {note.summary}
+                            </div>
+                          )}
                           <p className="text-sm">{note.content}</p>
                           {note.audioRecording && (
                             <div className="mt-2">
@@ -221,7 +345,14 @@ export default function PatientProfile() {
                 </Card>
                 
                 {/* Audio Note Recorder */}
-                <AudioNoteRecorder onSaveNote={handleSaveNote} />
+                <AudioNoteRecorder 
+                  onSaveNote={handleSaveNote} 
+                  visits={visits.map(v => ({
+                    id: v.id,
+                    date: v.date,
+                    reason: v.reason
+                  }))}
+                />
                 
                 <Card>
                   <CardContent className="p-6">
@@ -247,28 +378,10 @@ export default function PatientProfile() {
                     </div>
                   </CardContent>
                 </Card>
-                
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium">Patient Education</h3>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 text-medical-600">
-                        <ExternalLink className="h-4 w-4" />
-                        <span>See all</span>
-                      </Button>
-                    </div>
-                    
-                    <div className="border rounded-md p-4 bg-muted/30">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Hypertension Management</h4>
-                        <span className="text-xs text-muted-foreground">Shared: Jan 12, 2024</span>
-                      </div>
-                      <p className="text-sm">
-                        Educational materials on managing high blood pressure through diet, exercise, and medication adherence.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+              </TabsContent>
+              
+              <TabsContent value="visits">
+                <VisitsTab visits={visits} onAddVisit={handleAddVisit} />
               </TabsContent>
               
               <TabsContent value="problems">
