@@ -11,15 +11,27 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { TaskCard } from "@/components/common/TaskCard";
 import { VitalCard } from "@/components/common/VitalCard";
 import { ExternalLink, FileText, MessageCircle, Phone } from "lucide-react";
-import { patients, tasks, vitals } from "@/data/mockData";
+import { patients, tasks, vitals, patientProblems, patientMedications, patientAllergies, patientLabResults, patientNotes } from "@/data/mockData";
+import { ProblemsTab } from "@/components/patient-details/ProblemsTab";
+import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
+import { AllergiesTab } from "@/components/patient-details/AllergiesTab";
+import { LabsTab } from "@/components/patient-details/LabsTab";
+import { AudioNoteRecorder } from "@/components/patient-details/AudioNoteRecorder";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function PatientProfile() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
+  const [notes, setNotes] = useState(patientNotes);
   
   const patient = patients.find(p => p.id === id);
   const patientTasks = tasks.filter(t => t.patientId === id);
   const patientVitals = vitals.filter(v => v.patientId === id);
+  const problems = patientProblems.filter(p => p.patientId === id);
+  const medications = patientMedications.filter(m => m.patientId === id);
+  const allergies = patientAllergies.filter(a => a.patientId === id);
+  const labResults = patientLabResults.filter(l => l.patientId === id);
   
   if (!patient) {
     return (
@@ -37,6 +49,32 @@ export default function PatientProfile() {
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+    
+  const handleUploadPdf = (file: File) => {
+    toast({
+      title: "Report Uploaded",
+      description: `${file.name} has been uploaded successfully.`,
+    });
+    // In a real application, you would upload this file to a server
+  };
+  
+  const handleSaveNote = (note: { text: string, audioUrl?: string }) => {
+    const newNote = {
+      id: `note${notes.length + 1}`,
+      patientId: id || "",
+      date: new Date().toLocaleDateString(),
+      content: note.text,
+      author: "Dr. Sharma",
+      audioRecording: note.audioUrl || null
+    };
+    
+    setNotes([newNote, ...notes]);
+    
+    toast({
+      title: "Note Saved",
+      description: "Your voice note has been transcribed and saved.",
+    });
+  };
 
   return (
     <PageContainer>
@@ -163,17 +201,27 @@ export default function PatientProfile() {
                       </Button>
                     </div>
                     
-                    <div className="border rounded-md p-4 bg-muted/30">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">Last Patient Note</h4>
-                        <span className="text-xs text-muted-foreground">Jan 17, 2024</span>
-                      </div>
-                      <p className="text-sm">
-                        Patient seems to have a strong aversion to needles. Consider using topical anesthesia for future blood draws. Discussed lifestyle changes regarding diet and exercise. Follow up in 3 months.
-                      </p>
+                    <div className="space-y-4">
+                      {notes.slice(0, 1).map(note => (
+                        <div key={note.id} className="border rounded-md p-4 bg-muted/30">
+                          <div className="flex justify-between items-start mb-2">
+                            <h4 className="font-medium">{note.author}</h4>
+                            <span className="text-xs text-muted-foreground">{note.date}</span>
+                          </div>
+                          <p className="text-sm">{note.content}</p>
+                          {note.audioRecording && (
+                            <div className="mt-2">
+                              <audio controls src={note.audioRecording} className="w-full h-8" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
+                
+                {/* Audio Note Recorder */}
+                <AudioNoteRecorder onSaveNote={handleSaveNote} />
                 
                 <Card>
                   <CardContent className="p-6">
@@ -224,47 +272,22 @@ export default function PatientProfile() {
               </TabsContent>
               
               <TabsContent value="problems">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-medium mb-4">Problems & Conditions</h3>
-                    <div className="text-center py-8 text-muted-foreground">
-                      This section is coming soon
-                    </div>
-                  </CardContent>
-                </Card>
+                <ProblemsTab problems={problems} />
               </TabsContent>
               
               <TabsContent value="medications">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-medium mb-4">Medications</h3>
-                    <div className="text-center py-8 text-muted-foreground">
-                      This section is coming soon
-                    </div>
-                  </CardContent>
-                </Card>
+                <MedicationsTab medications={medications} />
               </TabsContent>
               
               <TabsContent value="allergies">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-medium mb-4">Allergies</h3>
-                    <div className="text-center py-8 text-muted-foreground">
-                      This section is coming soon
-                    </div>
-                  </CardContent>
-                </Card>
+                <AllergiesTab allergies={allergies} />
               </TabsContent>
               
               <TabsContent value="labs">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-medium mb-4">Laboratory Results</h3>
-                    <div className="text-center py-8 text-muted-foreground">
-                      This section is coming soon
-                    </div>
-                  </CardContent>
-                </Card>
+                <LabsTab 
+                  labResults={labResults}
+                  onUploadPdf={handleUploadPdf}
+                />
               </TabsContent>
             </Tabs>
           </div>

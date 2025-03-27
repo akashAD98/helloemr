@@ -1,4 +1,3 @@
-
 // Mock data for our EMR application
 
 // Patient data
@@ -476,4 +475,195 @@ export const providers = [
   "Dr. Jennifer Davis",
   "Dr. Michael Wong",
   "Dr. Sarah Johnson"
+];
+
+export const patientProblems = [
+  {
+    id: "prob1",
+    patientId: "p7", // Priya Sharma
+    name: "Type 2 Diabetes Mellitus",
+    dateIdentified: "Jan 15, 2022",
+    status: "chronic",
+    notes: "Managed with diet and oral medications"
+  },
+  {
+    id: "prob2",
+    patientId: "p7",
+    name: "Hypertension",
+    dateIdentified: "Mar 03, 2022",
+    status: "active",
+    notes: "Blood pressure consistently high, monitoring medication efficacy"
+  },
+  {
+    id: "prob3",
+    patientId: "p7",
+    name: "Osteoarthritis",
+    dateIdentified: "Sep 18, 2022",
+    status: "active",
+    notes: "Primarily affecting knees, managed with NSAIDs and physiotherapy"
+  },
+  {
+    id: "prob4",
+    patientId: "p7",
+    name: "Urinary Tract Infection",
+    dateIdentified: "Dec 05, 2023",
+    status: "resolved",
+    notes: "Treated with antibiotics, resolved completely"
+  }
+];
+
+export const patientMedications = [
+  {
+    id: "med1",
+    patientId: "p7",
+    name: "Metformin",
+    dosage: "500mg",
+    frequency: "Twice daily",
+    startDate: "Jan 20, 2022",
+    status: "active"
+  },
+  {
+    id: "med2",
+    patientId: "p7",
+    name: "Amlodipine",
+    dosage: "5mg",
+    frequency: "Once daily",
+    startDate: "Mar 10, 2022",
+    status: "active"
+  },
+  {
+    id: "med3",
+    patientId: "p7",
+    name: "Paracetamol",
+    dosage: "500mg",
+    frequency: "As needed for pain",
+    startDate: "Sep 20, 2022",
+    status: "active"
+  },
+  {
+    id: "med4",
+    patientId: "p7",
+    name: "Ciprofloxacin",
+    dosage: "250mg",
+    frequency: "Twice daily for 7 days",
+    startDate: "Dec 05, 2023",
+    status: "discontinued"
+  }
+];
+
+export const patientAllergies = [
+  {
+    id: "alg1",
+    patientId: "p7",
+    allergen: "Penicillin",
+    reaction: "Skin rash",
+    severity: "moderate",
+    dateIdentified: "Feb 10, 2020"
+  },
+  {
+    id: "alg2",
+    patientId: "p7",
+    allergen: "Peanuts",
+    reaction: "Hives, difficulty breathing",
+    severity: "severe",
+    dateIdentified: "Aug 22, 2019"
+  },
+  {
+    id: "alg3",
+    patientId: "p7",
+    allergen: "Dust mites",
+    reaction: "Sneezing, nasal congestion",
+    severity: "mild",
+    dateIdentified: "Jan 05, 2021"
+  }
+];
+
+export const patientLabResults = [
+  {
+    id: "lab1",
+    patientId: "p7",
+    testName: "Fasting Blood Glucose",
+    value: "145",
+    unit: "mg/dL",
+    referenceRange: "70-99 mg/dL",
+    date: "Jan 10, 2024",
+    pdfReport: "/sample-reports/glucose-test.pdf"
+  },
+  {
+    id: "lab2",
+    patientId: "p7",
+    testName: "HbA1c",
+    value: "7.2",
+    unit: "%",
+    referenceRange: "<5.7%",
+    date: "Jan 10, 2024",
+    pdfReport: "/sample-reports/hba1c-test.pdf"
+  },
+  {
+    id: "lab3",
+    patientId: "p7",
+    testName: "Lipid Panel - Total Cholesterol",
+    value: "210",
+    unit: "mg/dL",
+    referenceRange: "<200 mg/dL",
+    date: "Jan 10, 2024",
+    pdfReport: "/sample-reports/lipid-panel.pdf"
+  },
+  {
+    id: "lab4",
+    patientId: "p7",
+    testName: "Lipid Panel - LDL",
+    value: "130",
+    unit: "mg/dL",
+    referenceRange: "<100 mg/dL",
+    date: "Jan 10, 2024",
+    pdfReport: "/sample-reports/lipid-panel.pdf"
+  },
+  {
+    id: "lab5",
+    patientId: "p7",
+    testName: "Lipid Panel - HDL",
+    value: "45",
+    unit: "mg/dL",
+    referenceRange: ">40 mg/dL",
+    date: "Jan 10, 2024",
+    pdfReport: "/sample-reports/lipid-panel.pdf"
+  },
+  {
+    id: "lab6",
+    patientId: "p7",
+    testName: "Complete Blood Count",
+    value: "Normal",
+    unit: "",
+    referenceRange: "Various",
+    date: "Dec 15, 2023",
+    pdfReport: "/sample-reports/cbc-test.pdf"
+  }
+];
+
+export const patientNotes = [
+  {
+    id: "note1",
+    patientId: "p7",
+    date: "Jan 17, 2024",
+    content: "Patient reports feeling tired and experiencing increased thirst. Blood glucose readings at home have been between 140-180 mg/dL. Advised to monitor diet more closely and increase physical activity.",
+    author: "Dr. Patel",
+    audioRecording: null
+  },
+  {
+    id: "note2",
+    patientId: "p7",
+    date: "Dec 05, 2023",
+    content: "Patient presented with symptoms of UTI. Prescribed Ciprofloxacin 250mg twice daily for 7 days. Advised to increase fluid intake and follow up if symptoms persist.",
+    author: "Dr. Singh",
+    audioRecording: null
+  },
+  {
+    id: "note3",
+    patientId: "p7",
+    date: "Sep 15, 2023",
+    content: "Quarterly diabetes check-up. HbA1c is 7.5%, slightly increased from last visit. Adjusting Metformin dosage and reviewing diet plan. Referred to nutritionist.",
+    author: "Dr. Patel",
+    audioRecording: null
+  }
 ];
