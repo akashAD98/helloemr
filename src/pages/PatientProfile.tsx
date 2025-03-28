@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PatientInfoSidebar } from "@/components/patient-details/PatientInfoSidebar";
 import { CurrentVisitAlert } from "@/components/patient-details/CurrentVisitAlert";
 import { OverviewTab } from "@/components/patient-details/OverviewTab";
+import { Patient } from "@/types/patient";
 
 // Extended note interface to include summary
 interface Note {
@@ -143,14 +144,11 @@ export default function PatientProfile() {
   const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
   const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
   
-  const patient = patients.find(p => p.id === id);
-  const patientTasks = tasks.filter(t => t.patientId === id);
-  const patientVitals = vitals.filter(v => v.patientId === id);
-  const problems = patientProblems.filter(p => p.patientId === id);
-  const medications = patientMedications.filter(m => m.patientId === id);
-  const allergies = patientAllergies.filter(a => a.patientId === id);
-  const labResults = patientLabResults.filter(l => l.patientId === id);
-  
+  const rawPatient = patients.find(p => p.id === id);
+  const patient: Patient | undefined = rawPatient 
+    ? { ...rawPatient, pronouns: rawPatient.pronouns || "" } 
+    : undefined;
+    
   if (!patient) {
     return (
       <PageContainer>
