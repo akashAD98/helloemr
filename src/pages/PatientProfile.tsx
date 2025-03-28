@@ -1,16 +1,10 @@
-
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { StatusBadge } from "@/components/common/StatusBadge";
-import { TaskCard } from "@/components/common/TaskCard";
-import { VitalCard } from "@/components/common/VitalCard";
-import { ExternalLink, FileText, MessageCircle, Phone } from "lucide-react";
+import { FileText, MessageCircle, Phone } from "lucide-react";
 import { 
   patients, 
   tasks, 
@@ -25,11 +19,12 @@ import { ProblemsTab } from "@/components/patient-details/ProblemsTab";
 import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
 import { AllergiesTab } from "@/components/patient-details/AllergiesTab";
 import { LabsTab } from "@/components/patient-details/LabsTab";
-import { AudioNoteRecorder } from "@/components/patient-details/AudioNoteRecorder";
-import { VisitsTab, Visit, ExamFindings } from "@/components/patient-details/VisitsTab";
+import { VisitsTab, Visit } from "@/components/patient-details/VisitsTab";
 import { PatientSummary } from "@/components/patient-details/PatientSummary";
-import { MedicalHistorySection } from "@/components/patient-details/MedicalHistorySection";
 import { useToast } from "@/hooks/use-toast";
+import { PatientInfoSidebar } from "@/components/patient-details/PatientInfoSidebar";
+import { CurrentVisitAlert } from "@/components/patient-details/CurrentVisitAlert";
+import { OverviewTab } from "@/components/patient-details/OverviewTab";
 
 // Extended note interface to include summary
 interface Note {
@@ -165,13 +160,6 @@ export default function PatientProfile() {
       </PageContainer>
     );
   }
-
-  // Get initials from name
-  const initials = patient.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
     
   const handleUploadPdf = (file: File) => {
     toast({
@@ -201,7 +189,7 @@ export default function PatientProfile() {
     
     // If this note is associated with a visit, update that visit
     if (note.visitId) {
-      setVisits(visits.map(visit => 
+      setVisits(prev => prev.map(visit => 
         visit.id === note.visitId 
           ? { 
               ...visit, 
@@ -278,85 +266,15 @@ export default function PatientProfile() {
 
         {/* Current Visit Alert - shown if patient has an in-session visit */}
         {currentVisit && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 animate-pulse">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="font-medium text-blue-800">{currentVisit.reason} - In Session</h3>
-                <p className="text-sm text-blue-700">Current provider: {currentVisit.provider}</p>
-              </div>
-              <Button 
-                variant="outline" 
-                className="bg-white text-blue-700 border-blue-300 hover:bg-blue-50"
-                onClick={() => handleEditVisit(currentVisit.id)}
-              >
-                View Details
-              </Button>
-            </div>
-          </div>
+          <CurrentVisitAlert 
+            visit={currentVisit} 
+            onEditVisit={handleEditVisit} 
+          />
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
-            <Card className="animate-slideUp">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center">
-                  <Avatar className="h-24 w-24 mb-4">
-                    <AvatarImage src={patient.image} alt={patient.name} />
-                    <AvatarFallback className="text-lg">{initials}</AvatarFallback>
-                  </Avatar>
-                  
-                  <h2 className="text-xl font-semibold">{patient.name}</h2>
-                  <p className="text-sm text-muted-foreground">{patient.pronouns}</p>
-                  
-                  <div className="mt-4 w-full">
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground text-right">Age:</div>
-                      <div className="text-left font-medium">{patient.age} years</div>
-                      
-                      <div className="text-muted-foreground text-right">Gender:</div>
-                      <div className="text-left font-medium">{patient.gender}</div>
-                      
-                      <div className="text-muted-foreground text-right">DOB:</div>
-                      <div className="text-left font-medium">{
-                        new Date(patient.dateOfBirth).toLocaleDateString()
-                      }</div>
-                      
-                      <div className="text-muted-foreground text-right">Status:</div>
-                      <div className="text-left">
-                        {patient.active ? (
-                          <StatusBadge status="completed" className="!bg-green-50">Active</StatusBadge>
-                        ) : (
-                          <StatusBadge status="overdue" className="!bg-red-50">Inactive</StatusBadge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="w-full border-t mt-4 pt-4">
-                    <h3 className="text-sm font-medium mb-2 text-left">Contact Information</h3>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-start">
-                        <span className="text-muted-foreground w-20">Email:</span>
-                        <span className="flex-1 text-left">{patient.contactInfo.email}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-muted-foreground w-20">Phone:</span>
-                        <span className="flex-1 text-left">{patient.contactInfo.phone}</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="text-muted-foreground w-20">Address:</span>
-                        <span className="flex-1 text-left">{patient.contactInfo.address}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="w-full border-t mt-4 pt-4">
-                    <h3 className="text-sm font-medium mb-2 text-left">Provider</h3>
-                    <div className="text-sm text-left">{patient.provider}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PatientInfoSidebar patient={patient} />
           </div>
           
           <div className="md:col-span-2 space-y-6">
@@ -385,95 +303,17 @@ export default function PatientProfile() {
                 <TabsTrigger value="labs">Labs</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="overview" className="space-y-6 mt-0">
-                {/* Medical History */}
-                <MedicalHistorySection 
+              <TabsContent value="overview">
+                <OverviewTab 
                   patientId={id || ""}
-                  conditions={medicalHistory}
-                  onEdit={handleEditMedicalHistory}
+                  medicalHistory={medicalHistory}
+                  vitals={patientVitals}
+                  notes={notes}
+                  visits={visits}
+                  tasks={patientTasks}
+                  onEditMedicalHistory={handleEditMedicalHistory}
+                  onSaveNote={handleSaveNote}
                 />
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {patientVitals.slice(0, 3).map(vital => (
-                    <VitalCard
-                      key={vital.id}
-                      title={vital.type}
-                      value={vital.value}
-                      unit={vital.unit}
-                      date={vital.date}
-                      secondary={vital.secondary}
-                    />
-                  ))}
-                </div>
-                
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium">Patient Notes</h3>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 text-medical-600">
-                        <ExternalLink className="h-4 w-4" />
-                        <span>See all</span>
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {notes.slice(0, 1).map(note => (
-                        <div key={note.id} className="border rounded-md p-4 bg-muted/30">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="font-medium">{note.author}</h4>
-                            <span className="text-xs text-muted-foreground">{note.date}</span>
-                          </div>
-                          {note.summary && (
-                            <div className="mb-2 text-sm font-medium bg-blue-50 text-blue-800 p-2 rounded">
-                              Summary: {note.summary}
-                            </div>
-                          )}
-                          <p className="text-sm">{note.content}</p>
-                          {note.audioRecording && (
-                            <div className="mt-2">
-                              <audio controls src={note.audioRecording} className="w-full h-8" />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Audio Note Recorder */}
-                <AudioNoteRecorder 
-                  onSaveNote={handleSaveNote} 
-                  visits={visits.map(v => ({
-                    id: v.id,
-                    date: v.date,
-                    reason: v.reason
-                  }))}
-                />
-                
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-medium">Patient Tasks</h3>
-                      <Button variant="ghost" size="sm" className="flex items-center gap-1 text-medical-600">
-                        <ExternalLink className="h-4 w-4" />
-                        <span>See all</span>
-                      </Button>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {patientTasks.slice(0, 3).map(task => (
-                        <TaskCard
-                          key={task.id}
-                          title={task.title}
-                          date={task.date}
-                          time={task.time}
-                          status={task.status}
-                          assignee={task.assignee}
-                        />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
               </TabsContent>
               
               <TabsContent value="visits">
