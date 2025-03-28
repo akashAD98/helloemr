@@ -88,12 +88,12 @@ export function VisitsTab({ visits, onAddVisit, onEditVisit }: VisitsTabProps) {
   };
 
   // Helper function to determine status badge type
-  const getStatusBadgeType = (status: string) => {
+  const getStatusBadgeType = (status: string): "completed" | "pending" | "cancelled" | "overdue" => {
     switch(status.toLowerCase()) {
       case "completed": return "completed";
       case "scheduled": return "pending";
       case "cancelled": return "cancelled";
-      case "in-session": return "in-progress";
+      case "in-session": return "overdue"; // Map in-session to overdue for visual distinction
       default: return "pending";
     }
   };
