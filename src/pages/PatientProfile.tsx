@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -7,13 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, MessageCircle, Phone } from "lucide-react";
 import { 
   patients, 
-  tasks, 
-  vitals, 
   patientProblems, 
   patientMedications, 
   patientAllergies, 
   patientLabResults, 
-  patientNotes 
+  patientNotes,
+  vitals as patientVitals,
+  tasks as patientTasks
 } from "@/data/mockData";
 import { ProblemsTab } from "@/components/patient-details/ProblemsTab";
 import { MedicationsTab } from "@/components/patient-details/MedicationsTab";
@@ -144,9 +145,35 @@ export default function PatientProfile() {
   const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
   const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
   
+  // Filter data for current patient
+  const filteredProblems = patientProblems.filter(p => p.patientId === id);
+  const filteredMedications = patientMedications.filter(m => m.patientId === id);
+  const filteredAllergies = patientAllergies.filter(a => a.patientId === id);
+  const filteredLabResults = patientLabResults.filter(l => l.patientId === id);
+  const filteredVitals = patientVitals.filter(v => v.patientId === id);
+  const filteredTasks = patientTasks.filter(t => t.patientId === id);
+  
   const rawPatient = patients.find(p => p.id === id);
+  
+  // Create a compatible Patient object by merging the fields
   const patient: Patient | undefined = rawPatient 
-    ? { ...rawPatient, pronouns: rawPatient.pronouns || "" } 
+    ? { 
+        id: rawPatient.id,
+        name: rawPatient.name,
+        firstName: rawPatient.name.split(' ')[0],
+        lastName: rawPatient.name.split(' ')[1],
+        gender: rawPatient.gender,
+        dateOfBirth: rawPatient.dateOfBirth,
+        age: rawPatient.age,
+        provider: rawPatient.provider,
+        image: rawPatient.image,
+        active: rawPatient.active,
+        pronouns: rawPatient.pronouns || "",
+        email: rawPatient.contactInfo?.email,
+        phone: rawPatient.contactInfo?.phone,
+        address: rawPatient.contactInfo?.address,
+        medicalHistory: rawPatient.medicalHistory
+      } 
     : undefined;
     
   if (!patient) {
@@ -227,8 +254,8 @@ export default function PatientProfile() {
   };
 
   // Calculate summary stats
-  const activeProblemsCount = problems.filter(p => p.status === "active").length;
-  const activeMedicationsCount = medications.filter(m => m.status === "active").length;
+  const activeProblemsCount = filteredProblems.filter(p => p.status === "active").length;
+  const activeMedicationsCount = filteredMedications.filter(m => m.status === "active").length;
   const lastVisitDate = visits.length > 0 
     ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date 
     : undefined;
@@ -282,7 +309,7 @@ export default function PatientProfile() {
               lastVisitDate={lastVisitDate}
               activeProblems={activeProblemsCount}
               activeMedications={activeMedicationsCount}
-              allergiesCount={allergies.length}
+              allergiesCount={filteredAllergies.length}
               recentSummary={recentSummary}
               nextAppointment="May 15, 2024 at 10:30 AM with Dr. Sharma"
             />
@@ -305,10 +332,10 @@ export default function PatientProfile() {
                 <OverviewTab 
                   patientId={id || ""}
                   medicalHistory={medicalHistory}
-                  vitals={patientVitals}
+                  vitals={filteredVitals}
                   notes={notes}
                   visits={visits}
-                  tasks={patientTasks}
+                  tasks={filteredTasks}
                   onEditMedicalHistory={handleEditMedicalHistory}
                   onSaveNote={handleSaveNote}
                 />
@@ -323,20 +350,20 @@ export default function PatientProfile() {
               </TabsContent>
               
               <TabsContent value="problems">
-                <ProblemsTab problems={problems} />
+                <ProblemsTab problems={filteredProblems} />
               </TabsContent>
               
               <TabsContent value="medications">
-                <MedicationsTab medications={medications} />
+                <MedicationsTab medications={filteredMedications} />
               </TabsContent>
               
               <TabsContent value="allergies">
-                <AllergiesTab allergies={allergies} />
+                <AllergiesTab allergies={filteredAllergies} />
               </TabsContent>
               
               <TabsContent value="labs">
                 <LabsTab 
-                  labResults={labResults}
+                  labResults={filteredLabResults}
                   onUploadPdf={handleUploadPdf}
                 />
               </TabsContent>
