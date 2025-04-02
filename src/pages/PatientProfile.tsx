@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -28,7 +27,6 @@ import { CurrentVisitAlert } from "@/components/patient-details/CurrentVisitAler
 import { OverviewTab } from "@/components/patient-details/OverviewTab";
 import { Patient } from "@/types/patient";
 
-// Extended note interface to include summary
 interface Note {
   id: string;
   patientId: string;
@@ -39,7 +37,6 @@ interface Note {
   summary?: string;
 }
 
-// Example mock data for visits with enhanced exam details
 const mockVisits: Visit[] = [
   {
     id: "visit1",
@@ -116,7 +113,6 @@ const mockVisits: Visit[] = [
   }
 ];
 
-// Example medical history conditions
 const mockMedicalHistory = [
   {
     id: "cond1",
@@ -145,7 +141,6 @@ export default function PatientProfile() {
   const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
   const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
   
-  // Filter data for current patient
   const filteredProblems = patientProblems.filter(p => p.patientId === id);
   const filteredMedications = patientMedications.filter(m => m.patientId === id);
   const filteredAllergies = patientAllergies.filter(a => a.patientId === id);
@@ -155,7 +150,6 @@ export default function PatientProfile() {
   
   const rawPatient = patients.find(p => p.id === id);
   
-  // Create a compatible Patient object by merging the fields
   const patient: Patient | undefined = rawPatient 
     ? { 
         id: rawPatient.id,
@@ -169,9 +163,7 @@ export default function PatientProfile() {
         image: rawPatient.image,
         active: rawPatient.active,
         pronouns: rawPatient.pronouns || "",
-        email: rawPatient.contactInfo?.email,
-        phone: rawPatient.contactInfo?.phone,
-        address: rawPatient.contactInfo?.address,
+        contactInfo: rawPatient.contactInfo,
         medicalHistory: rawPatient.medicalHistory
       } 
     : undefined;
@@ -191,7 +183,6 @@ export default function PatientProfile() {
       title: "Report Uploaded",
       description: `${file.name} has been uploaded successfully.`,
     });
-    // In a real application, you would upload this file to a server
   };
   
   const handleSaveNote = (note: { 
@@ -212,7 +203,6 @@ export default function PatientProfile() {
     
     setNotes([newNote, ...notes]);
     
-    // If this note is associated with a visit, update that visit
     if (note.visitId) {
       setVisits(prev => prev.map(visit => 
         visit.id === note.visitId 
@@ -232,7 +222,6 @@ export default function PatientProfile() {
   };
 
   const handleAddVisit = () => {
-    // This would open a modal in a real application
     toast({
       title: "Add Visit",
       description: "This would open a form to add a new visit.",
@@ -253,7 +242,6 @@ export default function PatientProfile() {
     });
   };
 
-  // Calculate summary stats
   const activeProblemsCount = filteredProblems.filter(p => p.status === "active").length;
   const activeMedicationsCount = filteredMedications.filter(m => m.status === "active").length;
   const lastVisitDate = visits.length > 0 
@@ -263,7 +251,6 @@ export default function PatientProfile() {
     ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].summary 
     : undefined;
   
-  // Get current visit if in session
   const currentVisit = visits.find(v => v.status.toLowerCase() === "in-session");
 
   return (
@@ -289,7 +276,6 @@ export default function PatientProfile() {
           }
         />
 
-        {/* Current Visit Alert - shown if patient has an in-session visit */}
         {currentVisit && (
           <CurrentVisitAlert 
             visit={currentVisit} 
@@ -303,7 +289,6 @@ export default function PatientProfile() {
           </div>
           
           <div className="md:col-span-2 space-y-6">
-            {/* Patient Summary at the top */}
             <PatientSummary 
               patientId={id || ""}
               lastVisitDate={lastVisitDate}

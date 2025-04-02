@@ -15,9 +15,9 @@ export interface Patient {
   image?: string;
   active?: boolean;
   contactInfo?: {
-    email: string;
-    phone: string;
-    address: string;
+    email?: string;
+    phone?: string;
+    address?: string;
   };
   insurance?: string;
   insuranceId?: string;
