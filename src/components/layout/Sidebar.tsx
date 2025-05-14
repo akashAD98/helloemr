@@ -8,7 +8,8 @@ import {
   Calendar, 
   Settings as SettingsIcon, 
   ChevronLeft,
-  Activity
+  Activity,
+  Brain
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -62,6 +63,13 @@ export function Sidebar() {
             icon={<Calendar className="h-5 w-5" />}
             label="Appointments"
             isActive={location.pathname.startsWith('/appointments')}
+            isCollapsed={!isOpen}
+          />
+          <NavItem
+            to="/ai-analytics"
+            icon={<Brain className="h-5 w-5" />}
+            label="AI Analytics"
+            isActive={location.pathname.startsWith('/ai-analytics')}
             isCollapsed={!isOpen}
           />
           <NavItem
