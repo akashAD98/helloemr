@@ -4,8 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Brain, FileText, MessageSquare, Upload } from "lucide-react";
+import { Brain, FileText, MessageSquare } from "lucide-react";
 import { HealthAssistantChat } from "@/components/ai-analytics/HealthAssistantChat";
 import { DocumentAnalyzer } from "@/components/ai-analytics/DocumentAnalyzer";
 import { InsightsDashboard } from "@/components/ai-analytics/InsightsDashboard";
@@ -18,7 +17,7 @@ export default function AIAnalytics() {
       <div className="p-6 space-y-6">
         <PageHeader 
           title="AI Analytics" 
-          description="AI-powered tools to help analyze patient data and medical documents"
+          description="AI-powered tools to analyze patient data, medical documents, and generate clinical insights"
         />
         
         <div className="grid grid-cols-1 gap-6">
@@ -75,7 +74,7 @@ export default function AIAnalytics() {
                 <CardHeader className="pb-3">
                   <CardTitle>AI Insights</CardTitle>
                   <CardDescription>
-                    Review AI-generated insights across all patient data to identify trends and improve care
+                    Review AI-generated insights across your patient population to identify trends and improve care
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
