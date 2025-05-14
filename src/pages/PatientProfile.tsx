@@ -35,6 +35,7 @@ interface Note {
   author: string;
   audioRecording: string | null;
   summary?: string;
+  pdfUrl?: string;
 }
 
 const mockVisits: Visit[] = [
@@ -189,7 +190,8 @@ export default function PatientProfile() {
     text: string, 
     audioUrl?: string, 
     visitId?: string,
-    summary?: string
+    summary?: string,
+    pdfUrl?: string
   }) => {
     const newNote: Note = {
       id: `note${notes.length + 1}`,
@@ -217,7 +219,9 @@ export default function PatientProfile() {
     
     toast({
       title: "Note Saved",
-      description: "Your voice note has been transcribed and saved.",
+      description: note.pdfUrl 
+        ? "The PDF document has been attached to patient notes."
+        : "Your note has been saved to the patient record.",
     });
   };
 

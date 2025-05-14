@@ -42,6 +42,7 @@ interface OverviewTabProps {
     audioUrl?: string;
     visitId?: string;
     summary?: string;
+    pdfUrl?: string;
   }) => void;
 }
 
@@ -68,16 +69,11 @@ export function OverviewTab({
       <PatientVitals vitals={vitals} />
       
       {/* Patient Notes */}
-      <PatientNotes notes={notes} />
-      
-      {/* Audio Note Recorder */}
-      <AudioNoteRecorder 
-        onSaveNote={onSaveNote} 
-        visits={visits.map(v => ({
-          id: v.id,
-          date: v.date,
-          reason: v.reason
-        }))}
+      <PatientNotes 
+        notes={notes} 
+        patientId={patientId} 
+        visits={visits}
+        onSaveNote={onSaveNote}
       />
       
       {/* Patient Tasks */}
