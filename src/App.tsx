@@ -12,6 +12,7 @@ import Appointments from "./pages/Appointments";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import AIAnalytics from "./pages/AIAnalytics";
+import EPrescribing from "./pages/EPrescribing";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/patients/:id" element={<PatientProfile />} />
             <Route path="/appointments" element={<Appointments />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
+            <Route path="/e-prescribing" element={<EPrescribing />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
