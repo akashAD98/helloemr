@@ -5,9 +5,9 @@ import { toast } from "sonner";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { Calendar, CalendarIcon, Clock, PlusCircle, CheckCircle } from "lucide-react";
+import { Calendar, CalendarIcon, Clock, PlusCircle, CheckCircle, Users, AlertCircle, Activity } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,6 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { AppointmentFormDialog } from "@/components/appointments/AppointmentFormDialog";
+import { AppointmentStats } from "@/components/appointments/AppointmentStats";
+import { AppointmentCard } from "@/components/appointments/AppointmentCard";
 import { appointments, patients, Appointment } from "@/data/mockData";
 
 export default function Appointments() {
@@ -39,6 +41,34 @@ export default function Appointments() {
     const matchesProvider = provider === "all" || appointment.provider.includes(provider);
     return matchesDate && matchesProvider;
   });
+
+  // Calculate appointment statistics
+  const todaysStats = {
+    total: filteredAppointments.length,
+    pending: filteredAppointments.filter(a => a.status === "pending").length,
+    booked: filteredAppointments.filter(a => a.status === "booked").length,
+    completed: filteredAppointments.filter(a => a.status === "completed").length,
+    cancelled: filteredAppointments.filter(a => a.status === "cancelled").length,
+    ongoing: filteredAppointments.filter(a => a.status === "booked" && isCurrentTimeSlot(a.time)).length
+  };
+
+  // Check if appointment is currently ongoing
+  function isCurrentTimeSlot(appointmentTime: string): boolean {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const [time, period] = appointmentTime.split(' ');
+    const [hour, minute] = time.split(':').map(Number);
+    
+    let appointmentHour = hour;
+    if (period === 'PM' && hour !== 12) appointmentHour += 12;
+    if (period === 'AM' && hour === 12) appointmentHour = 0;
+    
+    const appointmentStart = appointmentHour * 60 + minute;
+    const currentTime = currentHour * 60 + currentMinute;
+    
+    return currentTime >= appointmentStart && currentTime <= appointmentStart + 30;
+  }
 
   // Handle appointment creation
   const handleCreateAppointment = (formData: any) => {
@@ -90,7 +120,7 @@ export default function Appointments() {
       <div className="p-6 space-y-6">
         <PageHeader 
           title="Appointments" 
-          description="Manage your schedule"
+          description={`Schedule Management - ${format(date, "EEEE, MMMM d, yyyy")}`}
           actions={
             <Button onClick={() => setIsDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -98,6 +128,9 @@ export default function Appointments() {
             </Button>
           }
         />
+
+        {/* Daily Statistics */}
+        <AppointmentStats stats={todaysStats} selectedDate={date} />
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 space-y-6">
@@ -132,7 +165,7 @@ export default function Appointments() {
             <Card className="animate-slideUp animation-delay-100">
               <CardContent className="p-4 space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Provider</h3>
+                  <h3 className="text-sm font-medium mb-2">Filter by Provider</h3>
                   <Select value={provider} onValueChange={setProvider}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select provider" />
@@ -147,27 +180,15 @@ export default function Appointments() {
                 </div>
                 
                 <div>
-                  <h3 className="text-sm font-medium mb-2">Appointment Summary</h3>
-                  <div className="space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total:</span>
-                      <span className="font-medium">{filteredAppointments.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Booked:</span>
-                      <span className="font-medium">
-                        {filteredAppointments.filter(a => a.status === "booked").length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pending:</span>
-                      <span className="font-medium">
-                        {filteredAppointments.filter(a => a.status === "pending").length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
+                  <h3 className="text-sm font-medium mb-2">Quick Stats</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between items-center">
                       <span className="text-muted-foreground">Available slots:</span>
-                      <span className="font-medium">4</span>
+                      <span className="font-medium text-green-600">4</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Peak hours:</span>
+                      <span className="font-medium">10 AM - 2 PM</span>
                     </div>
                   </div>
                 </div>
@@ -181,64 +202,22 @@ export default function Appointments() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold flex items-center">
                     <Calendar className="mr-2 h-5 w-5 text-medical-600" />
-                    {format(date, "EEEE, MMMM d, yyyy")}
+                    Daily Schedule
                   </h2>
+                  <div className="text-sm text-muted-foreground">
+                    {filteredAppointments.length} appointments scheduled
+                  </div>
                 </div>
                 
                 {filteredAppointments.length > 0 ? (
                   <div className="space-y-4">
                     {filteredAppointments.map((appointment) => (
-                      <div 
-                        key={appointment.id} 
-                        className="flex p-4 border rounded-lg hover:shadow-subtle transition-all card-hover"
-                      >
-                        <div className="flex-shrink-0 w-20 text-center">
-                          <div className="text-lg font-medium">{appointment.time}</div>
-                          <div className="text-xs text-muted-foreground">{appointment.duration}</div>
-                        </div>
-                        
-                        <div className="ml-4 flex-1">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">{appointment.patientName}</h3>
-                              <div className="text-sm text-muted-foreground">{appointment.type}</div>
-                              {appointment.reasonForVisit && (
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  Reason: {appointment.reasonForVisit}
-                                </div>
-                              )}
-                            </div>
-                            <StatusBadge status={appointment.status} />
-                          </div>
-                          
-                          <div className="mt-2 text-xs text-muted-foreground">
-                            Provider: {appointment.provider}
-                          </div>
-                        </div>
-                        
-                        <div className="ml-4 flex items-center">
-                          {appointment.status === "pending" && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleStatusChange(appointment.id, "booked")}
-                            >
-                              <Clock className="h-4 w-4 mr-1" />
-                              <span>Confirm</span>
-                            </Button>
-                          )}
-                          {appointment.status === "booked" && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleStatusChange(appointment.id, "completed")}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              <span>Complete</span>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                      <AppointmentCard
+                        key={appointment.id}
+                        appointment={appointment}
+                        onStatusChange={handleStatusChange}
+                        isOngoing={isCurrentTimeSlot(appointment.time)}
+                      />
                     ))}
                   </div>
                 ) : (

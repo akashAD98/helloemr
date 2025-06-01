@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { format } from "date-fns";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -7,14 +8,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientCard } from "@/components/common/PatientCard";
 import { TaskCard } from "@/components/common/TaskCard";
-import { PlusCircle, Users, CheckCircle, Clock } from "lucide-react";
-import { patients, tasks } from "@/data/mockData";
+import { PlusCircle, Users, CheckCircle, Clock, Calendar, Activity } from "lucide-react";
+import { patients, tasks, appointments } from "@/data/mockData";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const recentPatients = patients.slice(0, 3);
   const pendingTasks = tasks.filter(task => task.status === "pending");
   const overdueTasks = tasks.filter(task => task.status === "overdue");
+
+  // Get today's appointments
+  const today = format(new Date(), "yyyy-MM-dd");
+  const todaysAppointments = appointments.filter(appointment => appointment.date === today);
+  
+  // Calculate appointment statistics for today
+  const appointmentStats = {
+    total: todaysAppointments.length,
+    pending: todaysAppointments.filter(a => a.status === "pending").length,
+    booked: todaysAppointments.filter(a => a.status === "booked").length,
+    completed: todaysAppointments.filter(a => a.status === "completed").length,
+    ongoing: todaysAppointments.filter(a => a.status === "booked" && isCurrentTimeSlot(a.time)).length
+  };
+
+  // Check if appointment is currently ongoing
+  function isCurrentTimeSlot(appointmentTime: string): boolean {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const [time, period] = appointmentTime.split(' ');
+    const [hour, minute] = time.split(':').map(Number);
+    
+    let appointmentHour = hour;
+    if (period === 'PM' && hour !== 12) appointmentHour += 12;
+    if (period === 'AM' && hour === 12) appointmentHour = 0;
+    
+    const appointmentStart = appointmentHour * 60 + minute;
+    const currentTime = currentHour * 60 + currentMinute;
+    
+    return currentTime >= appointmentStart && currentTime <= appointmentStart + 30;
+  }
 
   return (
     <PageContainer>
@@ -30,6 +62,68 @@ export default function Dashboard() {
           }
         />
 
+        {/* Today's Appointment Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="animate-slideUp">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Calendar className="mr-2 h-5 w-5 text-blue-600" />
+                Today's Appointments
+              </CardTitle>
+              <CardDescription>Total scheduled for today</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600">{appointmentStats.total}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {format(new Date(), "EEEE, MMM d")}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="animate-slideUp animation-delay-75">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Clock className="mr-2 h-5 w-5 text-yellow-600" />
+                Pending
+              </CardTitle>
+              <CardDescription>Awaiting confirmation</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-yellow-600">{appointmentStats.pending}</div>
+              <p className="text-xs text-muted-foreground mt-1">Need to confirm</p>
+            </CardContent>
+          </Card>
+
+          <Card className="animate-slideUp animation-delay-150">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <CheckCircle className="mr-2 h-5 w-5 text-green-600" />
+                Completed
+              </CardTitle>
+              <CardDescription>Finished appointments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">{appointmentStats.completed}</div>
+              <p className="text-xs text-muted-foreground mt-1">Successfully done</p>
+            </CardContent>
+          </Card>
+
+          <Card className="animate-slideUp animation-delay-225">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Activity className="mr-2 h-5 w-5 text-red-600" />
+                Ongoing
+              </CardTitle>
+              <CardDescription>Currently in progress</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">{appointmentStats.ongoing}</div>
+              <p className="text-xs text-muted-foreground mt-1">Active now</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rest of dashboard content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="animate-slideUp">
             <CardHeader className="pb-2">
@@ -63,13 +157,13 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center">
                 <Clock className="mr-2 h-5 w-5 text-medical-600" />
-                Upcoming Appointments
+                Next Appointment
               </CardTitle>
-              <CardDescription>Scheduled for today</CardDescription>
+              <CardDescription>Coming up next</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">8</div>
-              <p className="text-xs text-muted-foreground mt-1">Next at 10:30 AM</p>
+              <div className="text-3xl font-bold">10:30</div>
+              <p className="text-xs text-muted-foreground mt-1">Jane Doe - Follow-up</p>
             </CardContent>
           </Card>
         </div>
