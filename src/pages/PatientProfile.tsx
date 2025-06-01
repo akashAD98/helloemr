@@ -4,7 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MessageCircle, Phone } from "lucide-react";
+import { Phone, MessageCircle, Mic, MicOff } from "lucide-react";
 import { 
   patients, 
   patientProblems, 
@@ -26,6 +26,7 @@ import { PatientInfoSidebar } from "@/components/patient-details/PatientInfoSide
 import { CurrentVisitAlert } from "@/components/patient-details/CurrentVisitAlert";
 import { OverviewTab } from "@/components/patient-details/OverviewTab";
 import { Patient } from "@/types/patient";
+import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
 
 interface Note {
   id: string;
@@ -141,6 +142,15 @@ export default function PatientProfile() {
   const [notes, setNotes] = useState<Note[]>(patientNotes as Note[]);
   const [visits, setVisits] = useState<Visit[]>(mockVisits.filter(v => v.patientId === id));
   const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
+  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  
+  const { 
+    isRecording, 
+    audioUrl, 
+    recordingTime,
+    startRecording, 
+    stopRecording 
+  } = useAudioRecording();
   
   const filteredProblems = patientProblems.filter(p => p.patientId === id);
   const filteredMedications = patientMedications.filter(m => m.patientId === id);
@@ -221,8 +231,45 @@ export default function PatientProfile() {
       title: "Note Saved",
       description: note.pdfUrl 
         ? "The PDF document has been attached to patient notes."
-        : "Your note has been saved to the patient record.",
+        : "Your audio note has been saved to the patient record.",
     });
+  };
+
+  const handleAudioRecording = async () => {
+    if (isRecording) {
+      stopRecording();
+      setIsProcessingAudio(true);
+      
+      // Simulate AI transcription and clinical notes generation
+      setTimeout(() => {
+        const mockTranscription = "Patient reports feeling better after starting the new medication. Blood pressure readings have improved to 130/85. Patient still experiences occasional headaches in the morning, but they are less severe. Patient is following the prescribed exercise regimen and has noticed increased energy levels. Follow up in 2 weeks to adjust medication if needed.";
+        const mockSummary = "Patient showing improvement with new medication. BP improved to 130/85. Minor morning headaches persist. Adhering to exercise plan with increased energy. 2-week follow-up recommended.";
+        
+        // Find current visit or create a new one
+        const currentVisit = visits.find(v => v.status.toLowerCase() === "in-session");
+        const visitId = currentVisit?.id;
+        
+        handleSaveNote({
+          text: mockTranscription,
+          audioUrl: audioUrl || undefined,
+          visitId: visitId,
+          summary: mockSummary
+        });
+        
+        setIsProcessingAudio(false);
+        
+        toast({
+          title: "Audio Note Processed",
+          description: "Your audio has been transcribed and clinical notes have been generated.",
+        });
+      }, 3000);
+    } else {
+      await startRecording();
+      toast({
+        title: "Recording Started",
+        description: "Speak your clinical notes. Click stop when finished.",
+      });
+    }
   };
 
   const handleAddVisit = () => {
@@ -272,9 +319,23 @@ export default function PatientProfile() {
                 <MessageCircle className="h-4 w-4 mr-2" />
                 Message
               </Button>
-              <Button size="sm">
-                <FileText className="h-4 w-4 mr-2" />
-                Add Note
+              <Button 
+                size="sm" 
+                onClick={handleAudioRecording}
+                disabled={isProcessingAudio}
+                variant={isRecording ? "destructive" : "default"}
+              >
+                {isRecording ? (
+                  <>
+                    <MicOff className="h-4 w-4 mr-2" />
+                    Stop Recording ({formatTime(recordingTime)})
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4 mr-2" />
+                    {isProcessingAudio ? "Processing..." : "Audio Note"}
+                  </>
+                )}
               </Button>
             </div>
           }
