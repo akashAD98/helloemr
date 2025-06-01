@@ -123,7 +123,7 @@ export function PrescriptionQueue() {
       case "ready":
         return <Badge variant="default">Ready</Badge>;
       case "sent":
-        return <Badge variant="success" className="bg-green-500 hover:bg-green-600">Sent</Badge>;
+        return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200">Sent</Badge>;
       case "error":
         return <Badge variant="destructive">Error</Badge>;
       default:

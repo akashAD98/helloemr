@@ -104,7 +104,7 @@ export function InteractionChecker() {
               {medicationToCheck && mockInteractions.length > 0 ? (
                 <div className="space-y-2 mt-2">
                   {mockInteractions.map((interaction, index) => (
-                    <Alert key={index} variant={interaction.severity === "high" ? "destructive" : "warning"}>
+                    <Alert key={index} variant="destructive">
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>Interaction: {medicationToCheck}</AlertTitle>
                       <AlertDescription className="space-y-2">
