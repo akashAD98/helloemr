@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { AppointmentFormDialog } from "@/components/appointments/AppointmentFormDialog";
 import { AppointmentStats } from "@/components/appointments/AppointmentStats";
-import { AppointmentCard } from "@/components/appointments/AppointmentCard";
+import { DetailedAppointmentList } from "@/components/appointments/DetailedAppointmentList";
 import { appointments, patients, Appointment } from "@/data/mockData";
 
 export default function Appointments() {
@@ -202,38 +202,18 @@ export default function Appointments() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold flex items-center">
                     <Calendar className="mr-2 h-5 w-5 text-medical-600" />
-                    Daily Schedule
+                    Today's Appointments
                   </h2>
                   <div className="text-sm text-muted-foreground">
                     {filteredAppointments.length} appointments scheduled
                   </div>
                 </div>
                 
-                {filteredAppointments.length > 0 ? (
-                  <div className="space-y-4">
-                    {filteredAppointments.map((appointment) => (
-                      <AppointmentCard
-                        key={appointment.id}
-                        appointment={appointment}
-                        onStatusChange={handleStatusChange}
-                        isOngoing={isCurrentTimeSlot(appointment.time)}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-16 text-center text-muted-foreground">
-                    <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-                    <h3 className="text-lg font-medium">No appointments scheduled</h3>
-                    <p className="mt-1">There are no appointments scheduled for this date.</p>
-                    <Button 
-                      className="mt-4"
-                      onClick={() => setIsDialogOpen(true)}
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Appointment
-                    </Button>
-                  </div>
-                )}
+                <DetailedAppointmentList
+                  appointments={filteredAppointments}
+                  onStatusChange={handleStatusChange}
+                  isCurrentTimeSlot={isCurrentTimeSlot}
+                />
               </CardContent>
             </Card>
           </div>
