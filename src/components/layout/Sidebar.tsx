@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useSidebar } from './SidebarProvider';
@@ -28,7 +27,7 @@ export function Sidebar() {
       <div className="flex items-center h-16 px-4 border-b border-border justify-between">
         <div className="flex items-center gap-2 overflow-hidden">
           {isOpen && (
-            <span className="text-xl font-semibold text-medical-700 animate-fadeIn">HelloEMR</span>
+            <span className="text-xl font-semibold text-medical-700 animate-fadeIn">Deepai EMR</span>
           )}
           {!isOpen && <Activity className="h-6 w-6 text-medical-600" />}
         </div>

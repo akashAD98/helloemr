@@ -53,7 +53,7 @@ export default function Dashboard() {
       <div className="p-6 space-y-6">
         <PageHeader 
           title="Dashboard" 
-          description="Welcome back, Dr. Davis"
+          description="Welcome back, Dr. Jennifer Davis"
           actions={
             <Button>
               <PlusCircle className="mr-2 h-4 w-4" />
