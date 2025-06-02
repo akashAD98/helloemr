@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -39,13 +38,15 @@ interface AppointmentFormDialogProps {
   selectedDate?: Date;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: AppointmentFormData) => void;
+  showBackButton?: boolean;
 }
 
 export function AppointmentFormDialog({
   open,
   selectedDate,
   onOpenChange,
-  onSubmit
+  onSubmit,
+  showBackButton = false
 }: AppointmentFormDialogProps) {
   const [formData, setFormData] = useState<AppointmentFormData>({
     patientId: "",
@@ -82,8 +83,186 @@ export function AppointmentFormDialog({
     }
 
     onSubmit(formData);
-    onOpenChange(false);
+    if (!showBackButton) {
+      onOpenChange(false);
+    }
   };
+
+  // If used within the wizard, render without dialog wrapper
+  if (showBackButton) {
+    return (
+      <>
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <DialogTitle>Schedule Appointment</DialogTitle>
+              <DialogDescription>
+                Select a patient and schedule their appointment
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="patient" className="text-right">
+              Patient
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={formData.patientId} 
+                onValueChange={(value) => handleChange('patientId', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map(patient => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      {patient.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="date" className="text-right">
+              Date
+            </Label>
+            <div className="col-span-3">
+              <Input
+                id="date"
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleChange('date', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="time" className="text-right">
+              Time
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={formData.time} 
+                onValueChange={(value) => handleChange('time', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTimeSlots.map(slot => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="duration" className="text-right">
+              Duration
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={formData.duration} 
+                onValueChange={(value) => handleChange('duration', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  {durationOptions.map(option => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="type" className="text-right">
+              Type
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleChange('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {appointmentTypes.map(type => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="provider" className="text-right">
+              Provider
+            </Label>
+            <div className="col-span-3">
+              <Select 
+                value={formData.provider} 
+                onValueChange={(value) => handleChange('provider', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {providers.map(provider => (
+                    <SelectItem key={provider} value={provider}>
+                      {provider}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="reason" className="text-right">
+              Reason
+            </Label>
+            <div className="col-span-3">
+              <Textarea
+                id="reason"
+                placeholder="Reason for visit"
+                value={formData.reasonForVisit}
+                onChange={(e) => handleChange('reasonForVisit', e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Back
+          </Button>
+          <Button onClick={handleSubmit}>
+            Schedule Appointment
+          </Button>
+        </DialogFooter>
+      </>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

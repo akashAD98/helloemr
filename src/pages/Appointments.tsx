@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
@@ -26,6 +25,7 @@ import { AppointmentFormDialog } from "@/components/appointments/AppointmentForm
 import { AppointmentStats } from "@/components/appointments/AppointmentStats";
 import { DetailedAppointmentList } from "@/components/appointments/DetailedAppointmentList";
 import { appointments, patients, Appointment } from "@/data/mockData";
+import { NewAppointmentWizard } from "@/components/appointments/NewAppointmentWizard";
 
 export default function Appointments() {
   const [date, setDate] = useState<Date>(new Date());
@@ -70,30 +70,54 @@ export default function Appointments() {
     return currentTime >= appointmentStart && currentTime <= appointmentStart + 30;
   }
 
-  // Handle appointment creation
-  const handleCreateAppointment = (formData: any) => {
-    const patientData = patients.find(p => p.id === formData.patientId);
-    
-    if (!patientData) {
-      toast.error("Patient not found");
-      return;
+  // Handle appointment creation for both existing and new patients
+  const handleCreateAppointment = (data: any) => {
+    // Check if this includes a new patient
+    if (data.patient && data.appointment) {
+      // Add new patient to mock data (in real app, this would be saved to database)
+      const newPatient = data.patient;
+      const appointmentData = data.appointment;
+      
+      const newAppointment: Appointment = {
+        id: `a${localAppointments.length + 1}`,
+        patientId: newPatient.id,
+        patientName: newPatient.name,
+        date: appointmentData.date,
+        time: appointmentData.time,
+        duration: appointmentData.duration,
+        type: appointmentData.type,
+        status: "pending",
+        provider: appointmentData.provider,
+        reasonForVisit: appointmentData.reasonForVisit
+      };
+      
+      setLocalAppointments([...localAppointments, newAppointment]);
+      toast.success(`New patient ${newPatient.name} registered and appointment scheduled`);
+    } else {
+      // Existing patient appointment
+      const patientData = patients.find(p => p.id === data.patientId);
+      
+      if (!patientData) {
+        toast.error("Patient not found");
+        return;
+      }
+      
+      const newAppointment: Appointment = {
+        id: `a${localAppointments.length + 1}`,
+        patientId: data.patientId,
+        patientName: patientData.name,
+        date: data.date,
+        time: data.time,
+        duration: data.duration,
+        type: data.type,
+        status: "pending",
+        provider: data.provider,
+        reasonForVisit: data.reasonForVisit
+      };
+      
+      setLocalAppointments([...localAppointments, newAppointment]);
+      toast.success(`Appointment scheduled for ${patientData.name}`);
     }
-    
-    const newAppointment: Appointment = {
-      id: `a${localAppointments.length + 1}`,
-      patientId: formData.patientId,
-      patientName: patientData.name,
-      date: formData.date,
-      time: formData.time,
-      duration: formData.duration,
-      type: formData.type,
-      status: "pending",
-      provider: formData.provider,
-      reasonForVisit: formData.reasonForVisit
-    };
-    
-    setLocalAppointments([...localAppointments, newAppointment]);
-    toast.success(`Appointment scheduled for ${patientData.name}`);
   };
 
   // Handle status change
@@ -220,7 +244,7 @@ export default function Appointments() {
         </div>
       </div>
       
-      <AppointmentFormDialog
+      <NewAppointmentWizard
         open={isDialogOpen}
         selectedDate={date}
         onOpenChange={setIsDialogOpen}
