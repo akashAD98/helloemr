@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -15,26 +15,51 @@ import {
 } from "@/components/ui/table";
 import { PatientCard } from "@/components/common/PatientCard";
 import { PlusCircle, Search } from "lucide-react";
-import { patients } from "@/data/mockData";
+import { dataStore } from "@/lib/dataStore";
+import { Patient } from "@/types/patient";
+import { toast } from "sonner";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const [patients, setPatients] = useState<Patient[]>([]);
+  
+  // Load patients from data store
+  useEffect(() => {
+    const loadPatients = () => {
+      const allPatients = dataStore.getPatients();
+      setPatients(allPatients);
+    };
+    
+    loadPatients();
+    
+    // Listen for storage changes to update when new patients are added
+    const handleStorageChange = () => {
+      loadPatients();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   
   const filteredPatients = patients.filter(patient => 
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.gender.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.provider.toLowerCase().includes(searchTerm.toLowerCase())
+    patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.gender?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.provider?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleNewPatient = () => {
+    toast.info("New patient registration will be available soon");
+  };
 
   return (
     <PageContainer>
       <div className="p-6 space-y-6">
         <PageHeader 
           title="Patients" 
-          description="Manage your patient records"
+          description={`Manage your patient records (${patients.length} total patients)`}
           actions={
-            <Button>
+            <Button onClick={handleNewPatient}>
               <PlusCircle className="mr-2 h-4 w-4" />
               New Patient
             </Button>
@@ -78,11 +103,11 @@ export default function Patients() {
                   <PatientCard
                     key={patient.id}
                     id={patient.id}
-                    name={patient.name}
-                    age={patient.age}
+                    name={patient.name || `${patient.firstName} ${patient.lastName}` || "Unknown"}
+                    age={patient.age || 0}
                     gender={patient.gender}
                     pronouns={patient.pronouns}
-                    provider={patient.provider}
+                    provider={patient.provider || patient.primaryProvider}
                   />
                 ))}
                 
@@ -111,12 +136,14 @@ export default function Patients() {
                         className="cursor-pointer hover:bg-muted/50"
                         onClick={() => window.location.href = `/patients/${patient.id}`}
                       >
-                        <TableCell className="font-medium">{patient.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {patient.name || `${patient.firstName} ${patient.lastName}` || "Unknown"}
+                        </TableCell>
                         <TableCell>{patient.gender}</TableCell>
                         <TableCell>{patient.age} years</TableCell>
-                        <TableCell>{patient.provider}</TableCell>
+                        <TableCell>{patient.provider || patient.primaryProvider}</TableCell>
                         <TableCell>
-                          {patient.active ? (
+                          {patient.active !== false ? (
                             <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
                               Active
                             </span>

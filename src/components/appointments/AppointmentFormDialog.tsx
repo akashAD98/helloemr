@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { X, ArrowLeft } from "lucide-react";
-import { patients, appointmentTypes, availableTimeSlots, durationOptions, providers } from "@/data/mockData";
+import { appointmentTypes, availableTimeSlots, durationOptions, providers } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { dataStore } from "@/lib/dataStore";
+import { Patient } from "@/types/patient";
 
 interface AppointmentFormData {
   patientId: string;
@@ -48,6 +51,7 @@ export function AppointmentFormDialog({
   onSubmit,
   showBackButton = false
 }: AppointmentFormDialogProps) {
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>({
     patientId: "",
     date: selectedDate ? format(selectedDate, "yyyy-MM-dd") : "",
@@ -57,6 +61,12 @@ export function AppointmentFormDialog({
     provider: "Dr. Jennifer Davis",
     reasonForVisit: "",
   });
+
+  // Load patients from data store
+  useEffect(() => {
+    const allPatients = dataStore.getPatients();
+    setPatients(allPatients);
+  }, [open]);
 
   // Update form when selectedDate changes
   useEffect(() => {
@@ -75,14 +85,38 @@ export function AppointmentFormDialog({
     });
   };
 
+  const validateForm = (): boolean => {
+    if (!formData.patientId) {
+      toast.error("Please select a patient");
+      return false;
+    }
+    if (!formData.date) {
+      toast.error("Please select a date");
+      return false;
+    }
+    if (!formData.time) {
+      toast.error("Please select a time");
+      return false;
+    }
+    if (!formData.type) {
+      toast.error("Please select appointment type");
+      return false;
+    }
+    if (!formData.provider) {
+      toast.error("Please select a provider");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = () => {
-    // Validate form
-    if (!formData.patientId || !formData.date || !formData.time || !formData.type || !formData.provider) {
-      toast.error("Please fill in all required fields");
+    if (!validateForm()) {
       return;
     }
 
+    console.log("Submitting appointment:", formData);
     onSubmit(formData);
+    
     if (!showBackButton) {
       onOpenChange(false);
     }
@@ -107,34 +141,32 @@ export function AppointmentFormDialog({
         </DialogHeader>
 
         <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient" className="text-right">
-              Patient
+          <div className="space-y-2">
+            <Label htmlFor="patient">
+              Patient *
             </Label>
-            <div className="col-span-3">
-              <Select 
-                value={formData.patientId} 
-                onValueChange={(value) => handleChange('patientId', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select patient" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients.map(patient => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select 
+              value={formData.patientId} 
+              onValueChange={(value) => handleChange('patientId', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select patient" />
+              </SelectTrigger>
+              <SelectContent>
+                {patients.map(patient => (
+                  <SelectItem key={patient.id} value={patient.id}>
+                    {patient.name || `${patient.firstName} ${patient.lastName}` || "Unknown Patient"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
-              Date
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">
+                Date *
+              </Label>
               <Input
                 id="date"
                 type="date"
@@ -142,13 +174,10 @@ export function AppointmentFormDialog({
                 onChange={(e) => handleChange('date', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="time" className="text-right">
-              Time
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="time">
+                Time *
+              </Label>
               <Select 
                 value={formData.time} 
                 onValueChange={(value) => handleChange('time', value)}
@@ -167,11 +196,11 @@ export function AppointmentFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="duration" className="text-right">
-              Duration
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">
+                Duration
+              </Label>
               <Select 
                 value={formData.duration} 
                 onValueChange={(value) => handleChange('duration', value)}
@@ -188,13 +217,10 @@ export function AppointmentFormDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">
-              Type
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="type">
+                Type *
+              </Label>
               <Select 
                 value={formData.type} 
                 onValueChange={(value) => handleChange('type', value)}
@@ -213,42 +239,38 @@ export function AppointmentFormDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="provider" className="text-right">
-              Provider
+          <div className="space-y-2">
+            <Label htmlFor="provider">
+              Provider *
             </Label>
-            <div className="col-span-3">
-              <Select 
-                value={formData.provider} 
-                onValueChange={(value) => handleChange('provider', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers.map(provider => (
-                    <SelectItem key={provider} value={provider}>
-                      {provider}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select 
+              value={formData.provider} 
+              onValueChange={(value) => handleChange('provider', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map(provider => (
+                  <SelectItem key={provider} value={provider}>
+                    {provider}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="reason" className="text-right">
-              Reason
+          <div className="space-y-2">
+            <Label htmlFor="reason">
+              Reason for Visit
             </Label>
-            <div className="col-span-3">
-              <Textarea
-                id="reason"
-                placeholder="Reason for visit"
-                value={formData.reasonForVisit}
-                onChange={(e) => handleChange('reasonForVisit', e.target.value)}
-                rows={3}
-              />
-            </div>
+            <Textarea
+              id="reason"
+              placeholder="Reason for visit"
+              value={formData.reasonForVisit}
+              onChange={(e) => handleChange('reasonForVisit', e.target.value)}
+              rows={3}
+            />
           </div>
         </div>
 

@@ -24,19 +24,38 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { AppointmentFormDialog } from "@/components/appointments/AppointmentFormDialog";
 import { AppointmentStats } from "@/components/appointments/AppointmentStats";
 import { DetailedAppointmentList } from "@/components/appointments/DetailedAppointmentList";
-import { appointments, patients, Appointment } from "@/data/mockData";
+import { Appointment } from "@/data/mockData";
 import { NewAppointmentWizard } from "@/components/appointments/NewAppointmentWizard";
+import { dataStore } from "@/lib/dataStore";
 
 export default function Appointments() {
   const [date, setDate] = useState<Date>(new Date());
   const [provider, setProvider] = useState<string>("all");
-  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(appointments);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const formattedDate = format(date, "yyyy-MM-dd");
   
+  // Load appointments from data store
+  useEffect(() => {
+    const loadAppointments = () => {
+      const allAppointments = dataStore.getAppointments();
+      setAppointments(allAppointments);
+    };
+    
+    loadAppointments();
+    
+    // Listen for storage changes to update when new appointments are added
+    const handleStorageChange = () => {
+      loadAppointments();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
   // Filter appointments based on selected date and provider
-  const filteredAppointments = localAppointments.filter(appointment => {
+  const filteredAppointments = appointments.filter(appointment => {
     const matchesDate = appointment.date === formattedDate;
     const matchesProvider = provider === "all" || appointment.provider.includes(provider);
     return matchesDate && matchesProvider;
@@ -72,70 +91,86 @@ export default function Appointments() {
 
   // Handle appointment creation for both existing and new patients
   const handleCreateAppointment = (data: any) => {
-    // Check if this includes a new patient
-    if (data.patient && data.appointment) {
-      // Add new patient to mock data (in real app, this would be saved to database)
-      const newPatient = data.patient;
-      const appointmentData = data.appointment;
-      
-      const newAppointment: Appointment = {
-        id: `a${localAppointments.length + 1}`,
-        patientId: newPatient.id,
-        patientName: newPatient.name,
-        date: appointmentData.date,
-        time: appointmentData.time,
-        duration: appointmentData.duration,
-        type: appointmentData.type,
-        status: "pending",
-        provider: appointmentData.provider,
-        reasonForVisit: appointmentData.reasonForVisit
-      };
-      
-      setLocalAppointments([...localAppointments, newAppointment]);
-      toast.success(`New patient ${newPatient.name} registered and appointment scheduled`);
-    } else {
-      // Existing patient appointment
-      const patientData = patients.find(p => p.id === data.patientId);
-      
-      if (!patientData) {
-        toast.error("Patient not found");
-        return;
+    try {
+      // Check if this includes a new patient
+      if (data.patient && data.appointment) {
+        // Add new patient to data store
+        const newPatient = data.patient;
+        dataStore.addPatient(newPatient);
+        
+        const appointmentData = data.appointment;
+        const newAppointment: Appointment = {
+          id: dataStore.generateAppointmentId(),
+          patientId: newPatient.id,
+          patientName: newPatient.name,
+          date: appointmentData.date,
+          time: appointmentData.time,
+          duration: appointmentData.duration,
+          type: appointmentData.type,
+          status: "pending",
+          provider: appointmentData.provider,
+          reasonForVisit: appointmentData.reasonForVisit
+        };
+        
+        dataStore.addAppointment(newAppointment);
+        
+        // Update local state
+        setAppointments(dataStore.getAppointments());
+        
+        toast.success(`New patient ${newPatient.name} registered and appointment scheduled for ${appointmentData.date} at ${appointmentData.time}`);
+      } else {
+        // Existing patient appointment
+        const patientData = dataStore.getPatientById(data.patientId);
+        
+        if (!patientData) {
+          toast.error("Patient not found");
+          return;
+        }
+        
+        const newAppointment: Appointment = {
+          id: dataStore.generateAppointmentId(),
+          patientId: data.patientId,
+          patientName: patientData.name || `${patientData.firstName} ${patientData.lastName}`,
+          date: data.date,
+          time: data.time,
+          duration: data.duration,
+          type: data.type,
+          status: "pending",
+          provider: data.provider,
+          reasonForVisit: data.reasonForVisit
+        };
+        
+        dataStore.addAppointment(newAppointment);
+        
+        // Update local state
+        setAppointments(dataStore.getAppointments());
+        
+        toast.success(`Appointment scheduled for ${patientData.name} on ${data.date} at ${data.time}`);
       }
       
-      const newAppointment: Appointment = {
-        id: `a${localAppointments.length + 1}`,
-        patientId: data.patientId,
-        patientName: patientData.name,
-        date: data.date,
-        time: data.time,
-        duration: data.duration,
-        type: data.type,
-        status: "pending",
-        provider: data.provider,
-        reasonForVisit: data.reasonForVisit
-      };
-      
-      setLocalAppointments([...localAppointments, newAppointment]);
-      toast.success(`Appointment scheduled for ${patientData.name}`);
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      toast.error("Failed to create appointment. Please try again.");
     }
   };
 
   // Handle status change
   const handleStatusChange = (appointmentId: string, newStatus: 'booked' | 'pending' | 'cancelled' | 'completed') => {
-    setLocalAppointments(prevAppointments => 
-      prevAppointments.map(appointment => 
-        appointment.id === appointmentId 
-          ? { ...appointment, status: newStatus }
-          : appointment
-      )
-    );
-    
-    const appointment = localAppointments.find(a => a.id === appointmentId);
-    if (appointment) {
-      const statusText = newStatus === 'completed' ? 'completed' : 
-                         newStatus === 'cancelled' ? 'cancelled' : 
-                         'updated';
-      toast.success(`Appointment ${statusText} for ${appointment.patientName}`);
+    try {
+      dataStore.updateAppointment(appointmentId, { status: newStatus });
+      setAppointments(dataStore.getAppointments());
+      
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (appointment) {
+        const statusText = newStatus === 'completed' ? 'completed' : 
+                           newStatus === 'cancelled' ? 'cancelled' : 
+                           newStatus === 'booked' ? 'confirmed' : 'updated';
+        toast.success(`Appointment ${statusText} for ${appointment.patientName}`);
+      }
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
+      toast.error("Failed to update appointment status");
     }
   };
 
@@ -144,7 +179,7 @@ export default function Appointments() {
       <div className="p-6 space-y-6">
         <PageHeader 
           title="Appointments" 
-          description={`Schedule Management - ${format(date, "EEEE, MMMM d, yyyy")}`}
+          description={`Schedule Management - ${format(date, "EEEE, MMMM d, yyyy")} (${appointments.length} total appointments)`}
           actions={
             <Button onClick={() => setIsDialogOpen(true)}>
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -197,6 +232,7 @@ export default function Appointments() {
                     <SelectContent>
                       <SelectItem value="all">All Providers</SelectItem>
                       <SelectItem value="Dr. Jennifer Davis">Dr. Jennifer Davis</SelectItem>
+                      <SelectItem value="Dr. Anjali Gupta">Dr. Anjali Gupta</SelectItem>
                       <SelectItem value="Dr. Michael Wong">Dr. Michael Wong</SelectItem>
                       <SelectItem value="Dr. Sarah Johnson">Dr. Sarah Johnson</SelectItem>
                     </SelectContent>
@@ -207,12 +243,12 @@ export default function Appointments() {
                   <h3 className="text-sm font-medium mb-2">Quick Stats</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Available slots:</span>
-                      <span className="font-medium text-green-600">4</span>
+                      <span className="text-muted-foreground">Total appointments:</span>
+                      <span className="font-medium text-blue-600">{appointments.length}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Peak hours:</span>
-                      <span className="font-medium">10 AM - 2 PM</span>
+                      <span className="text-muted-foreground">Today's appointments:</span>
+                      <span className="font-medium text-green-600">{todaysStats.total}</span>
                     </div>
                   </div>
                 </div>
@@ -226,7 +262,7 @@ export default function Appointments() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold flex items-center">
                     <Calendar className="mr-2 h-5 w-5 text-medical-600" />
-                    Today's Appointments
+                    Selected Day's Appointments
                   </h2>
                   <div className="text-sm text-muted-foreground">
                     {filteredAppointments.length} appointments scheduled

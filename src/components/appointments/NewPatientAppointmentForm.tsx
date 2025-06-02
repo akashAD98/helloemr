@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import { appointmentTypes, availableTimeSlots, durationOptions, providers, patients } from "@/data/mockData";
+import { appointmentTypes, availableTimeSlots, durationOptions, providers } from "@/data/mockData";
 import { Patient } from "@/types/patient";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { dataStore } from "@/lib/dataStore";
 
 interface NewPatientAppointmentFormProps {
   selectedDate?: Date;
@@ -35,11 +36,13 @@ export function NewPatientAppointmentForm({
   onSubmit
 }: NewPatientAppointmentFormProps) {
   const [patientData, setPatientData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     dateOfBirth: "",
     gender: "",
     phone: "",
     email: "",
+    address: "",
   });
 
   const [appointmentData, setAppointmentData] = useState({
@@ -85,33 +88,79 @@ export function NewPatientAppointmentForm({
     return age;
   };
 
-  const handleSubmit = () => {
+  const validateForm = (): boolean => {
     // Validate patient data
-    if (!patientData.name || !patientData.dateOfBirth || !patientData.gender || !patientData.phone) {
-      toast.error("Please fill in all required patient fields");
-      return;
+    if (!patientData.firstName.trim() || !patientData.lastName.trim()) {
+      toast.error("Please enter patient's first and last name");
+      return false;
+    }
+    
+    if (!patientData.dateOfBirth) {
+      toast.error("Please enter patient's date of birth");
+      return false;
+    }
+    
+    if (!patientData.gender) {
+      toast.error("Please select patient's gender");
+      return false;
+    }
+    
+    if (!patientData.phone.trim()) {
+      toast.error("Please enter patient's phone number");
+      return false;
     }
 
     // Validate appointment data
-    if (!appointmentData.date || !appointmentData.time || !appointmentData.type || !appointmentData.provider) {
-      toast.error("Please fill in all required appointment fields");
+    if (!appointmentData.date) {
+      toast.error("Please select appointment date");
+      return false;
+    }
+    
+    if (!appointmentData.time) {
+      toast.error("Please select appointment time");
+      return false;
+    }
+    
+    if (!appointmentData.type) {
+      toast.error("Please select appointment type");
+      return false;
+    }
+    
+    if (!appointmentData.provider) {
+      toast.error("Please select a provider");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
       return;
     }
 
     // Create new patient object
     const newPatient: Patient = {
-      id: `p${patients.length + 1}`,
-      name: patientData.name,
+      id: dataStore.generatePatientId(),
+      firstName: patientData.firstName.trim(),
+      lastName: patientData.lastName.trim(),
+      name: `${patientData.firstName.trim()} ${patientData.lastName.trim()}`,
       dateOfBirth: patientData.dateOfBirth,
       age: calculateAge(patientData.dateOfBirth),
       gender: patientData.gender,
       active: true,
+      status: "active",
       provider: appointmentData.provider,
+      primaryProvider: appointmentData.provider,
       contactInfo: {
-        email: patientData.email,
-        phone: patientData.phone,
-        address: ""
-      }
+        email: patientData.email.trim() || undefined,
+        phone: patientData.phone.trim(),
+        address: patientData.address.trim() || undefined
+      },
+      email: patientData.email.trim() || undefined,
+      phone: patientData.phone.trim(),
+      address: patientData.address.trim() || undefined,
+      lastVisit: new Date().toISOString().split('T')[0]
     };
 
     // Create appointment data
@@ -119,6 +168,8 @@ export function NewPatientAppointmentForm({
       patientId: newPatient.id,
       ...appointmentData
     };
+
+    console.log("Creating new patient and appointment:", { patient: newPatient, appointment: appointmentFormData });
 
     onSubmit({ patient: newPatient, appointment: appointmentFormData });
   };
@@ -142,27 +193,38 @@ export function NewPatientAppointmentForm({
       <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto">
         {/* Patient Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Patient Information</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Patient Information</h3>
           
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient-name" className="text-right">
-              Name *
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-firstName">
+                First Name *
+              </Label>
               <Input
-                id="patient-name"
-                value={patientData.name}
-                onChange={(e) => handlePatientChange('name', e.target.value)}
-                placeholder="Full name"
+                id="patient-firstName"
+                value={patientData.firstName}
+                onChange={(e) => handlePatientChange('firstName', e.target.value)}
+                placeholder="First name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient-lastName">
+                Last Name *
+              </Label>
+              <Input
+                id="patient-lastName"
+                value={patientData.lastName}
+                onChange={(e) => handlePatientChange('lastName', e.target.value)}
+                placeholder="Last name"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient-dob" className="text-right">
-              Date of Birth *
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-dob">
+                Date of Birth *
+              </Label>
               <Input
                 id="patient-dob"
                 type="date"
@@ -170,13 +232,10 @@ export function NewPatientAppointmentForm({
                 onChange={(e) => handlePatientChange('dateOfBirth', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient-gender" className="text-right">
-              Gender *
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="patient-gender">
+                Gender *
+              </Label>
               <Select 
                 value={patientData.gender} 
                 onValueChange={(value) => handlePatientChange('gender', value)}
@@ -194,11 +253,11 @@ export function NewPatientAppointmentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient-phone" className="text-right">
-              Phone *
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-phone">
+                Phone *
+              </Label>
               <Input
                 id="patient-phone"
                 value={patientData.phone}
@@ -206,13 +265,10 @@ export function NewPatientAppointmentForm({
                 placeholder="(555) 123-4567"
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="patient-email" className="text-right">
-              Email
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="patient-email">
+                Email
+              </Label>
               <Input
                 id="patient-email"
                 type="email"
@@ -222,17 +278,29 @@ export function NewPatientAppointmentForm({
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="patient-address">
+              Address
+            </Label>
+            <Input
+              id="patient-address"
+              value={patientData.address}
+              onChange={(e) => handlePatientChange('address', e.target.value)}
+              placeholder="Street address"
+            />
+          </div>
         </div>
 
         {/* Appointment Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium">Appointment Details</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Appointment Details</h3>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-date" className="text-right">
-              Date *
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="appointment-date">
+                Date *
+              </Label>
               <Input
                 id="appointment-date"
                 type="date"
@@ -240,13 +308,10 @@ export function NewPatientAppointmentForm({
                 onChange={(e) => handleAppointmentChange('date', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-time" className="text-right">
-              Time *
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="appointment-time">
+                Time *
+              </Label>
               <Select 
                 value={appointmentData.time} 
                 onValueChange={(value) => handleAppointmentChange('time', value)}
@@ -265,11 +330,11 @@ export function NewPatientAppointmentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-duration" className="text-right">
-              Duration
-            </Label>
-            <div className="col-span-3">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="appointment-duration">
+                Duration
+              </Label>
               <Select 
                 value={appointmentData.duration} 
                 onValueChange={(value) => handleAppointmentChange('duration', value)}
@@ -286,13 +351,10 @@ export function NewPatientAppointmentForm({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-type" className="text-right">
-              Type *
-            </Label>
-            <div className="col-span-3">
+            <div className="space-y-2">
+              <Label htmlFor="appointment-type">
+                Type *
+              </Label>
               <Select 
                 value={appointmentData.type} 
                 onValueChange={(value) => handleAppointmentChange('type', value)}
@@ -311,42 +373,38 @@ export function NewPatientAppointmentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-provider" className="text-right">
+          <div className="space-y-2">
+            <Label htmlFor="appointment-provider">
               Provider *
             </Label>
-            <div className="col-span-3">
-              <Select 
-                value={appointmentData.provider} 
-                onValueChange={(value) => handleAppointmentChange('provider', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  {providers.map(provider => (
-                    <SelectItem key={provider} value={provider}>
-                      {provider}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select 
+              value={appointmentData.provider} 
+              onValueChange={(value) => handleAppointmentChange('provider', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map(provider => (
+                  <SelectItem key={provider} value={provider}>
+                    {provider}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="appointment-reason" className="text-right">
-              Reason
+          <div className="space-y-2">
+            <Label htmlFor="appointment-reason">
+              Reason for Visit
             </Label>
-            <div className="col-span-3">
-              <Textarea
-                id="appointment-reason"
-                placeholder="Reason for visit"
-                value={appointmentData.reasonForVisit}
-                onChange={(e) => handleAppointmentChange('reasonForVisit', e.target.value)}
-                rows={3}
-              />
-            </div>
+            <Textarea
+              id="appointment-reason"
+              placeholder="Reason for visit"
+              value={appointmentData.reasonForVisit}
+              onChange={(e) => handleAppointmentChange('reasonForVisit', e.target.value)}
+              rows={3}
+            />
           </div>
         </div>
       </div>
