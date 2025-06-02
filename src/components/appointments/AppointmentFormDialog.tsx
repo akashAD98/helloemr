@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, ArrowLeft } from "lucide-react";
 import { patients, appointmentTypes, availableTimeSlots, durationOptions, providers } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import {
