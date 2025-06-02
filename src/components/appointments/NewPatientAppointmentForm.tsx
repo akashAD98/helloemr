@@ -40,9 +40,17 @@ export function NewPatientAppointmentForm({
     lastName: "",
     dateOfBirth: "",
     gender: "",
+    pronouns: "",
     phone: "",
     email: "",
     address: "",
+    insurance: "",
+    insuranceId: "",
+    emergencyContact: "",
+    emergencyPhone: "",
+    preferredPharmacy: "",
+    medicalHistory: [] as string[],
+    medicalHistoryText: "",
   });
 
   const [appointmentData, setAppointmentData] = useState({
@@ -139,7 +147,13 @@ export function NewPatientAppointmentForm({
       return;
     }
 
-    // Create new patient object
+    // Process medical history
+    const medicalHistoryArray = patientData.medicalHistoryText
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+
+    // Create new patient object with all fields
     const newPatient: Patient = {
       id: dataStore.generatePatientId(),
       firstName: patientData.firstName.trim(),
@@ -148,6 +162,7 @@ export function NewPatientAppointmentForm({
       dateOfBirth: patientData.dateOfBirth,
       age: calculateAge(patientData.dateOfBirth),
       gender: patientData.gender,
+      pronouns: patientData.pronouns.trim() || undefined,
       active: true,
       status: "active",
       provider: appointmentData.provider,
@@ -160,6 +175,12 @@ export function NewPatientAppointmentForm({
       email: patientData.email.trim() || undefined,
       phone: patientData.phone.trim(),
       address: patientData.address.trim() || undefined,
+      insurance: patientData.insurance.trim() || undefined,
+      insuranceId: patientData.insuranceId.trim() || undefined,
+      emergencyContact: patientData.emergencyContact.trim() || undefined,
+      emergencyPhone: patientData.emergencyPhone.trim() || undefined,
+      preferredPharmacy: patientData.preferredPharmacy.trim() || undefined,
+      medicalHistory: medicalHistoryArray.length > 0 ? medicalHistoryArray : undefined,
       lastVisit: new Date().toISOString().split('T')[0]
     };
 
@@ -190,10 +211,10 @@ export function NewPatientAppointmentForm({
         </div>
       </DialogHeader>
 
-      <div className="grid gap-6 py-4 max-h-[60vh] overflow-y-auto">
-        {/* Patient Information */}
+      <div className="grid gap-6 py-4 max-h-[70vh] overflow-y-auto">
+        {/* Basic Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium border-b pb-2">Patient Information</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Basic Information</h3>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -253,6 +274,23 @@ export function NewPatientAppointmentForm({
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="patient-pronouns">
+              Pronouns
+            </Label>
+            <Input
+              id="patient-pronouns"
+              value={patientData.pronouns}
+              onChange={(e) => handlePatientChange('pronouns', e.target.value)}
+              placeholder="e.g., he/him, she/her, they/them"
+            />
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium border-b pb-2">Contact Information</h3>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="patient-phone">
@@ -288,6 +326,96 @@ export function NewPatientAppointmentForm({
               value={patientData.address}
               onChange={(e) => handlePatientChange('address', e.target.value)}
               placeholder="Street address"
+            />
+          </div>
+        </div>
+
+        {/* Insurance Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium border-b pb-2">Insurance Information</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-insurance">
+                Insurance Provider
+              </Label>
+              <Input
+                id="patient-insurance"
+                value={patientData.insurance}
+                onChange={(e) => handlePatientChange('insurance', e.target.value)}
+                placeholder="e.g., Blue Cross Blue Shield"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient-insuranceId">
+                Insurance ID
+              </Label>
+              <Input
+                id="patient-insuranceId"
+                value={patientData.insuranceId}
+                onChange={(e) => handlePatientChange('insuranceId', e.target.value)}
+                placeholder="Insurance member ID"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Emergency Contact */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium border-b pb-2">Emergency Contact</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient-emergencyContact">
+                Emergency Contact Name
+              </Label>
+              <Input
+                id="patient-emergencyContact"
+                value={patientData.emergencyContact}
+                onChange={(e) => handlePatientChange('emergencyContact', e.target.value)}
+                placeholder="Full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient-emergencyPhone">
+                Emergency Contact Phone
+              </Label>
+              <Input
+                id="patient-emergencyPhone"
+                value={patientData.emergencyPhone}
+                onChange={(e) => handlePatientChange('emergencyPhone', e.target.value)}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Information */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium border-b pb-2">Additional Information</h3>
+
+          <div className="space-y-2">
+            <Label htmlFor="patient-pharmacy">
+              Preferred Pharmacy
+            </Label>
+            <Input
+              id="patient-pharmacy"
+              value={patientData.preferredPharmacy}
+              onChange={(e) => handlePatientChange('preferredPharmacy', e.target.value)}
+              placeholder="e.g., CVS Pharmacy on Main St"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="patient-medicalHistory">
+              Medical History
+            </Label>
+            <Textarea
+              id="patient-medicalHistory"
+              placeholder="Enter medical conditions separated by commas (e.g., Diabetes, Hypertension, Asthma)"
+              value={patientData.medicalHistoryText}
+              onChange={(e) => handlePatientChange('medicalHistoryText', e.target.value)}
+              rows={3}
             />
           </div>
         </div>
