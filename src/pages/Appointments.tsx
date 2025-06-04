@@ -54,6 +54,14 @@ export default function Appointments() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
+  // Schedule notifications when appointments change
+  useEffect(() => {
+    // Import notification service dynamically to avoid circular dependencies
+    import('@/services/notificationService').then(({ notificationService }) => {
+      notificationService.scheduleAppointmentNotifications();
+    });
+  }, [appointments]);
+  
   // Filter appointments based on selected date and provider
   const filteredAppointments = appointments.filter(appointment => {
     const matchesDate = appointment.date === formattedDate;
@@ -117,6 +125,11 @@ export default function Appointments() {
         // Update local state
         setAppointments(dataStore.getAppointments());
         
+        // Schedule notifications for this appointment
+        import('@/services/notificationService').then(({ notificationService }) => {
+          notificationService.scheduleAppointmentNotifications();
+        });
+        
         toast.success(`New patient ${newPatient.name} registered and appointment scheduled for ${appointmentData.date} at ${appointmentData.time}`);
       } else {
         // Existing patient appointment
@@ -144,6 +157,11 @@ export default function Appointments() {
         
         // Update local state
         setAppointments(dataStore.getAppointments());
+        
+        // Schedule notifications for this appointment
+        import('@/services/notificationService').then(({ notificationService }) => {
+          notificationService.scheduleAppointmentNotifications();
+        });
         
         toast.success(`Appointment scheduled for ${patientData.name} on ${data.date} at ${data.time}`);
       }
