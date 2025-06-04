@@ -35,6 +35,7 @@ export function NewPatientAppointmentForm({
   onBack,
   onSubmit
 }: NewPatientAppointmentFormProps) {
+  // Standard patient template - similar to existing patients like Priya Sharma
   const [patientData, setPatientData] = useState({
     firstName: "",
     lastName: "",
@@ -49,8 +50,7 @@ export function NewPatientAppointmentForm({
     emergencyContact: "",
     emergencyPhone: "",
     preferredPharmacy: "",
-    medicalHistory: [] as string[],
-    medicalHistoryText: "",
+    medicalHistoryText: "", // For input, will be converted to array
   });
 
   const [appointmentData, setAppointmentData] = useState({
@@ -97,7 +97,7 @@ export function NewPatientAppointmentForm({
   };
 
   const validateForm = (): boolean => {
-    // Validate patient data
+    // Only validate required fields - others can be left blank
     if (!patientData.firstName.trim() || !patientData.lastName.trim()) {
       toast.error("Please enter patient's first and last name");
       return false;
@@ -147,13 +147,13 @@ export function NewPatientAppointmentForm({
       return;
     }
 
-    // Process medical history
+    // Process medical history - convert comma-separated string to array
     const medicalHistoryArray = patientData.medicalHistoryText
       .split(',')
       .map(item => item.trim())
       .filter(item => item.length > 0);
 
-    // Create new patient object with all fields
+    // Create new patient using standard template (like Priya Sharma)
     const newPatient: Patient = {
       id: dataStore.generatePatientId(),
       firstName: patientData.firstName.trim(),
@@ -162,16 +162,8 @@ export function NewPatientAppointmentForm({
       dateOfBirth: patientData.dateOfBirth,
       age: calculateAge(patientData.dateOfBirth),
       gender: patientData.gender,
+      // Optional fields - only include if provided, otherwise leave undefined
       pronouns: patientData.pronouns.trim() || undefined,
-      active: true,
-      status: "active",
-      provider: appointmentData.provider,
-      primaryProvider: appointmentData.provider,
-      contactInfo: {
-        email: patientData.email.trim() || undefined,
-        phone: patientData.phone.trim(),
-        address: patientData.address.trim() || undefined
-      },
       email: patientData.email.trim() || undefined,
       phone: patientData.phone.trim(),
       address: patientData.address.trim() || undefined,
@@ -181,7 +173,18 @@ export function NewPatientAppointmentForm({
       emergencyPhone: patientData.emergencyPhone.trim() || undefined,
       preferredPharmacy: patientData.preferredPharmacy.trim() || undefined,
       medicalHistory: medicalHistoryArray.length > 0 ? medicalHistoryArray : undefined,
-      lastVisit: new Date().toISOString().split('T')[0]
+      // Standard template fields
+      active: true,
+      status: "active",
+      provider: appointmentData.provider,
+      primaryProvider: appointmentData.provider,
+      lastVisit: new Date().toISOString().split('T')[0],
+      // Contact info object for consistency
+      contactInfo: {
+        email: patientData.email.trim() || undefined,
+        phone: patientData.phone.trim(),
+        address: patientData.address.trim() || undefined
+      }
     };
 
     // Create appointment data
@@ -190,7 +193,7 @@ export function NewPatientAppointmentForm({
       ...appointmentData
     };
 
-    console.log("Creating new patient and appointment:", { patient: newPatient, appointment: appointmentFormData });
+    console.log("Creating new patient with standard template:", { patient: newPatient, appointment: appointmentFormData });
 
     onSubmit({ patient: newPatient, appointment: appointmentFormData });
   };
@@ -205,7 +208,7 @@ export function NewPatientAppointmentForm({
           <div>
             <DialogTitle>Add New Patient & Schedule</DialogTitle>
             <DialogDescription>
-              Register a new patient and create their first appointment
+              Register a new patient using standard template and create their first appointment
             </DialogDescription>
           </div>
         </div>
@@ -276,7 +279,7 @@ export function NewPatientAppointmentForm({
 
           <div className="space-y-2">
             <Label htmlFor="patient-pronouns">
-              Pronouns
+              Pronouns (optional)
             </Label>
             <Input
               id="patient-pronouns"
@@ -305,7 +308,7 @@ export function NewPatientAppointmentForm({
             </div>
             <div className="space-y-2">
               <Label htmlFor="patient-email">
-                Email
+                Email (optional)
               </Label>
               <Input
                 id="patient-email"
@@ -319,7 +322,7 @@ export function NewPatientAppointmentForm({
 
           <div className="space-y-2">
             <Label htmlFor="patient-address">
-              Address
+              Address (optional)
             </Label>
             <Input
               id="patient-address"
@@ -332,7 +335,7 @@ export function NewPatientAppointmentForm({
 
         {/* Insurance Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium border-b pb-2">Insurance Information</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Insurance Information (optional)</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -362,7 +365,7 @@ export function NewPatientAppointmentForm({
 
         {/* Emergency Contact */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium border-b pb-2">Emergency Contact</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Emergency Contact (optional)</h3>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -392,7 +395,7 @@ export function NewPatientAppointmentForm({
 
         {/* Additional Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium border-b pb-2">Additional Information</h3>
+          <h3 className="text-lg font-medium border-b pb-2">Additional Information (optional)</h3>
 
           <div className="space-y-2">
             <Label htmlFor="patient-pharmacy">
@@ -524,7 +527,7 @@ export function NewPatientAppointmentForm({
 
           <div className="space-y-2">
             <Label htmlFor="appointment-reason">
-              Reason for Visit
+              Reason for Visit (optional)
             </Label>
             <Textarea
               id="appointment-reason"
