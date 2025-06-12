@@ -150,6 +150,14 @@ export default function PatientProfile() {
   const [medicalHistory, setMedicalHistory] = useState(mockMedicalHistory);
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   
+  // New state for editable data
+  const [problems, setProblems] = useState(patientProblems.filter(p => p.patientId === id));
+  const [medications, setMedications] = useState(patientMedications.filter(m => m.patientId === id));
+  const [allergies, setAllergies] = useState(patientAllergies.filter(a => a.patientId === id));
+  const [vitals, setVitals] = useState(patientVitals.filter(v => v.patientId === id));
+  const [labResults, setLabResults] = useState(patientLabResults.filter(l => l.patientId === id));
+  const [tasks, setTasks] = useState(patientTasks.filter(t => t.patientId === id));
+  
   const { 
     isRecording, 
     audioUrl, 
@@ -157,13 +165,6 @@ export default function PatientProfile() {
     startRecording, 
     stopRecording 
   } = useAudioRecording();
-  
-  const filteredProblems = patientProblems.filter(p => p.patientId === id);
-  const filteredMedications = patientMedications.filter(m => m.patientId === id);
-  const filteredAllergies = patientAllergies.filter(a => a.patientId === id);
-  const filteredLabResults = patientLabResults.filter(l => l.patientId === id);
-  const filteredVitals = patientVitals.filter(v => v.patientId === id);
-  const filteredTasks = patientTasks.filter(t => t.patientId === id);
   
   const rawPatient = patients.find(p => p.id === id);
   
@@ -194,6 +195,39 @@ export default function PatientProfile() {
       </PageContainer>
     );
   }
+
+  // Update handlers for each tab
+  const handleUpdateProblems = (updatedProblems: any[]) => {
+    setProblems(updatedProblems);
+    toast({
+      title: "Problems Updated",
+      description: "Patient problems have been successfully updated.",
+    });
+  };
+
+  const handleUpdateMedications = (updatedMedications: any[]) => {
+    setMedications(updatedMedications);
+    toast({
+      title: "Medications Updated",
+      description: "Patient medications have been successfully updated.",
+    });
+  };
+
+  const handleUpdateAllergies = (updatedAllergies: any[]) => {
+    setAllergies(updatedAllergies);
+    toast({
+      title: "Allergies Updated",
+      description: "Patient allergies have been successfully updated.",
+    });
+  };
+
+  const handleUpdateVitals = (updatedVitals: any[]) => {
+    setVitals(updatedVitals);
+    toast({
+      title: "Vitals Updated",
+      description: "Patient vitals have been successfully updated.",
+    });
+  };
     
   const handleUploadPdf = (file: File) => {
     toast({
@@ -299,8 +333,8 @@ export default function PatientProfile() {
     });
   };
 
-  const activeProblemsCount = filteredProblems.filter(p => p.status === "active").length;
-  const activeMedicationsCount = filteredMedications.filter(m => m.status === "active").length;
+  const activeProblemsCount = problems.filter(p => p.status === "active").length;
+  const activeMedicationsCount = medications.filter(m => m.status === "active").length;
   const lastVisitDate = visits.length > 0 
     ? visits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0].date 
     : undefined;
@@ -365,7 +399,7 @@ export default function PatientProfile() {
               lastVisitDate={lastVisitDate}
               activeProblems={activeProblemsCount}
               activeMedications={activeMedicationsCount}
-              allergiesCount={filteredAllergies.length}
+              allergiesCount={allergies.length}
               recentSummary={recentSummary}
               nextAppointment="May 15, 2024 at 10:30 AM with Dr. Sharma"
             />
@@ -388,12 +422,13 @@ export default function PatientProfile() {
                 <OverviewTab 
                   patientId={id || ""}
                   medicalHistory={medicalHistory}
-                  vitals={filteredVitals}
+                  vitals={vitals}
                   notes={notes}
                   visits={visits}
-                  tasks={filteredTasks}
+                  tasks={tasks}
                   onEditMedicalHistory={handleEditMedicalHistory}
                   onSaveNote={handleSaveNote}
+                  onUpdateVitals={handleUpdateVitals}
                 />
               </TabsContent>
               
@@ -406,20 +441,29 @@ export default function PatientProfile() {
               </TabsContent>
               
               <TabsContent value="problems">
-                <ProblemsTab problems={filteredProblems} />
+                <ProblemsTab 
+                  problems={problems} 
+                  onUpdateProblems={handleUpdateProblems}
+                />
               </TabsContent>
               
               <TabsContent value="medications">
-                <MedicationsTab medications={filteredMedications} />
+                <MedicationsTab 
+                  medications={medications} 
+                  onUpdateMedications={handleUpdateMedications}
+                />
               </TabsContent>
               
               <TabsContent value="allergies">
-                <AllergiesTab allergies={filteredAllergies} />
+                <AllergiesTab 
+                  allergies={allergies} 
+                  onUpdateAllergies={handleUpdateAllergies}
+                />
               </TabsContent>
               
               <TabsContent value="labs">
                 <LabsTab 
-                  labResults={filteredLabResults}
+                  labResults={labResults}
                   onUploadPdf={handleUploadPdf}
                 />
               </TabsContent>

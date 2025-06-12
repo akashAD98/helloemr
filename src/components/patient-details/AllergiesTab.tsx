@@ -1,5 +1,7 @@
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
   Table, 
   TableBody, 
@@ -9,21 +11,25 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { Edit } from "lucide-react";
+import { AllergiesForm } from "./forms/AllergiesForm";
 
 interface Allergy {
   id: string;
   allergen: string;
   reaction: string;
-  severity: string; // Changed from '"mild" | "moderate" | "severe"' to string
+  severity: string;
   dateIdentified: string;
 }
 
 interface AllergiesTabProps {
   allergies: Allergy[];
+  onUpdateAllergies?: (allergies: Allergy[]) => void;
 }
 
-export function AllergiesTab({ allergies }: AllergiesTabProps) {
-  // Helper function to determine status badge type based on severity
+export function AllergiesTab({ allergies, onUpdateAllergies }: AllergiesTabProps) {
+  const [isEditing, setIsEditing] = useState(false);
+
   const getSeverityBadgeType = (severity: string) => {
     switch(severity) {
       case "severe": return "high-risk";
@@ -33,10 +39,41 @@ export function AllergiesTab({ allergies }: AllergiesTabProps) {
     }
   };
 
+  const handleSave = (updatedAllergies: Allergy[]) => {
+    if (onUpdateAllergies) {
+      onUpdateAllergies(updatedAllergies);
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <AllergiesForm 
+            allergies={allergies}
+            onSave={handleSave}
+            onCancel={handleCancel}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardContent className="p-6">
-        <h3 className="text-lg font-medium mb-4">Allergies</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium">Allergies</h3>
+          <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+        </div>
         
         <div className="rounded-md border">
           <Table>

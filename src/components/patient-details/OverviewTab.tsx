@@ -2,7 +2,6 @@
 import { MedicalHistorySection } from "./MedicalHistorySection";
 import { PatientVitals } from "./PatientVitals";
 import { PatientNotes } from "./PatientNotes";
-import { AudioNoteRecorder } from "./AudioNoteRecorder";
 import { PatientTasks } from "./PatientTasks";
 
 interface MedicalCondition {
@@ -29,10 +28,20 @@ interface Note {
   summary?: string;
 }
 
+interface Vital {
+  id: string;
+  patientId: string;
+  type: string;
+  value: string;
+  unit: string;
+  date: string;
+  secondary?: string;
+}
+
 interface OverviewTabProps {
   patientId: string;
   medicalHistory: MedicalCondition[];
-  vitals: any[];
+  vitals: Vital[];
   notes: Note[];
   visits: { id: string; date: string; reason: string }[];
   tasks: any[];
@@ -44,6 +53,7 @@ interface OverviewTabProps {
     summary?: string;
     pdfUrl?: string;
   }) => void;
+  onUpdateVitals?: (vitals: Vital[]) => void;
 }
 
 export function OverviewTab({
@@ -54,7 +64,8 @@ export function OverviewTab({
   visits,
   tasks,
   onEditMedicalHistory,
-  onSaveNote
+  onSaveNote,
+  onUpdateVitals
 }: OverviewTabProps) {
   return (
     <div className="space-y-6 mt-0">
@@ -66,7 +77,11 @@ export function OverviewTab({
       />
       
       {/* Vitals */}
-      <PatientVitals vitals={vitals} />
+      <PatientVitals 
+        vitals={vitals} 
+        patientId={patientId}
+        onUpdateVitals={onUpdateVitals}
+      />
       
       {/* Patient Notes */}
       <PatientNotes 
