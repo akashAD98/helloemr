@@ -27,6 +27,7 @@ import { CurrentVisitAlert } from "@/components/patient-details/CurrentVisitAler
 import { OverviewTab } from "@/components/patient-details/OverviewTab";
 import { Patient } from "@/types/patient";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
+import { DeepAIAudioNotesTab } from "@/components/patient-details/DeepAIAudioNotesTab";
 
 interface Note {
   id: string;
@@ -409,13 +410,14 @@ export default function PatientProfile() {
               className="animate-fadeIn"
               onValueChange={setActiveTab}
             >
-              <TabsList className="grid grid-cols-6 mb-6">
+              <TabsList className="grid grid-cols-7 mb-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="visits">Visits</TabsTrigger>
                 <TabsTrigger value="problems">Problems</TabsTrigger>
                 <TabsTrigger value="medications">Medications</TabsTrigger>
                 <TabsTrigger value="allergies">Allergies</TabsTrigger>
                 <TabsTrigger value="labs">Labs</TabsTrigger>
+                <TabsTrigger value="deepai-audio">DeepAI Audio</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview">
@@ -465,6 +467,13 @@ export default function PatientProfile() {
                 <LabsTab 
                   labResults={labResults}
                   onUploadPdf={handleUploadPdf}
+                />
+              </TabsContent>
+              
+              <TabsContent value="deepai-audio">
+                <DeepAIAudioNotesTab 
+                  patientId={id || ""}
+                  onSaveNote={handleSaveNote}
                 />
               </TabsContent>
             </Tabs>
