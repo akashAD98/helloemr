@@ -10,7 +10,7 @@ interface Vital {
   id: string;
   patientId: string;
   type: string;
-  value: string;
+  value: string | number;
   unit: string;
   date: string;
   secondary?: string;

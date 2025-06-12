@@ -9,7 +9,7 @@ interface Vital {
   id: string;
   patientId: string;
   type: string;
-  value: string;
+  value: string | number;
   unit: string;
   date: string;
   secondary?: string;
@@ -42,14 +42,14 @@ export function VitalsForm({ vitals, patientId, onSave, onCancel }: VitalsFormPr
     setEditedVitals(editedVitals.filter(v => v.id !== id));
   };
 
-  const updateVital = (id: string, field: keyof Vital, value: string) => {
+  const updateVital = (id: string, field: keyof Vital, value: string | number) => {
     setEditedVitals(editedVitals.map(v => 
       v.id === id ? { ...v, [field]: value } : v
     ));
   };
 
   const handleSave = () => {
-    onSave(editedVitals.filter(v => v.type.trim() !== "" && v.value.trim() !== ""));
+    onSave(editedVitals.filter(v => v.type.trim() !== "" && String(v.value).trim() !== ""));
   };
 
   return (
@@ -80,7 +80,7 @@ export function VitalsForm({ vitals, patientId, onSave, onCancel }: VitalsFormPr
                   <Label htmlFor={`value-${vital.id}`}>Value</Label>
                   <Input
                     id={`value-${vital.id}`}
-                    value={vital.value}
+                    value={String(vital.value)}
                     onChange={(e) => updateVital(vital.id, 'value', e.target.value)}
                     placeholder="e.g., 120"
                   />
