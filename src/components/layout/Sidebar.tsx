@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   Activity,
   Brain,
-  Pill
+  Pill,
+  Mic
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -63,6 +64,13 @@ export function Sidebar() {
             icon={<Calendar className="h-5 w-5" />}
             label="Appointments"
             isActive={location.pathname.startsWith('/appointments')}
+            isCollapsed={!isOpen}
+          />
+          <NavItem
+            to="/deepai-audio-notes"
+            icon={<Mic className="h-5 w-5" />}
+            label="DeepAI Audio Notes"
+            isActive={location.pathname.startsWith('/deepai-audio-notes')}
             isCollapsed={!isOpen}
           />
           <NavItem

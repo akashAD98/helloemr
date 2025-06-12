@@ -1,42 +1,39 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider } from "@/components/layout/SidebarProvider";
-import Dashboard from "./pages/Dashboard";
-import PatientProfile from "./pages/PatientProfile";
-import Patients from "./pages/Patients";
-import Appointments from "./pages/Appointments";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
-import AIAnalytics from "./pages/AIAnalytics";
-import EPrescribing from "./pages/EPrescribing";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { SidebarProvider } from '@/components/layout/SidebarProvider';
+import Dashboard from '@/pages/Dashboard';
+import Patients from '@/pages/Patients';
+import PatientProfile from '@/pages/PatientProfile';
+import Appointments from '@/pages/Appointments';
+import AIAnalytics from '@/pages/AIAnalytics';
+import EPrescribing from '@/pages/EPrescribing';
+import Settings from '@/pages/Settings';
+import DeepAIAudioNotes from '@/pages/DeepAIAudioNotes';
+import NotFound from '@/pages/NotFound';
+import { Toaster } from '@/components/ui/sonner';
+import './App.css';
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <SidebarProvider>
+function App() {
+  return (
+    <Router>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/patients" element={<Patients />} />
             <Route path="/patients/:id" element={<PatientProfile />} />
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/deepai-audio-notes" element={<DeepAIAudioNotes />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
             <Route path="/e-prescribing" element={<EPrescribing />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </SidebarProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+          <Toaster />
+        </div>
+      </SidebarProvider>
+    </Router>
+  );
+}
 
 export default App;
