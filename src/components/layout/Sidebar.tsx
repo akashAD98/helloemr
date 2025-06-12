@@ -101,11 +101,11 @@ export function Sidebar() {
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
             <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-            <AvatarFallback>DR</AvatarFallback>
+            <AvatarFallback>AD</AvatarFallback>
           </Avatar>
           {isOpen && (
             <div className="overflow-hidden animate-fadeIn">
-              <p className="text-sm font-medium truncate">Dr. Jennifer Davis</p>
+              <p className="text-sm font-medium truncate">Dr. Akash Desai</p>
               <p className="text-xs text-muted-foreground truncate">Family Medicine</p>
             </div>
           )}
