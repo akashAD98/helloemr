@@ -121,7 +121,7 @@ Chief complaint of a headache that started three days ago with 10 out of 10 inte
             </Button>
             <Button className="bg-green-500 hover:bg-green-600">
               <FileText className="h-4 w-4 mr-2" />
-              RESUME
+              START AUDIO RECORDING
             </Button>
           </div>
         </div>

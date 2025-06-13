@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mic, FileText } from "lucide-react";
+import { Save } from "lucide-react";
 
 export default function DeepAIAudioNotes() {
   const { toast } = useToast();
@@ -29,7 +29,7 @@ export default function DeepAIAudioNotes() {
     setCustomInstructions(instructions);
   };
 
-  const handleStartSession = () => {
+  const handleSaveAndProcess = () => {
     if (!patientName || !visitType) {
       toast({
         title: "Missing Information",
@@ -55,7 +55,7 @@ export default function DeepAIAudioNotes() {
     window.open('/recording-session', '_blank');
 
     toast({
-      title: "Session Started",
+      title: "Session Prepared",
       description: "Recording session opened in new tab",
     });
   };
@@ -155,10 +155,10 @@ export default function DeepAIAudioNotes() {
                     />
                   </div>
 
-                  {/* Start Session Button */}
-                  <Button onClick={handleStartSession} className="w-full" size="lg">
-                    <Mic className="h-4 w-4 mr-2" />
-                    Start Recording Session
+                  {/* Save & Process Button */}
+                  <Button onClick={handleSaveAndProcess} className="w-full" size="lg">
+                    <Save className="h-4 w-4 mr-2" />
+                    Save & Process
                   </Button>
                 </div>
               </CardContent>
@@ -186,7 +186,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">4️⃣</span>
-                    <span>Click "Start Recording Session" to open the recording interface</span>
+                    <span>Click "Save & Process" to open the recording interface</span>
                   </div>
                 </div>
               </CardContent>
