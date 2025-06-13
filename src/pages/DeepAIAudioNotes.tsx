@@ -3,201 +3,69 @@ import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { DeepAIAudioForm } from "@/components/patient-details/forms/DeepAIAudioForm";
 import { TemplateSelector } from "@/components/deepai-audio/TemplateSelector";
-import { SessionDisplay } from "@/components/deepai-audio/SessionDisplay";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, FileText, Mic } from "lucide-react";
-
-interface Note {
-  id: string;
-  patientId: string;
-  date: string;
-  content: string;
-  author: string;
-  audioRecording: string | null;
-  summary?: string;
-  pdfUrl?: string;
-}
-
-interface SessionData {
-  id: string;
-  patientName: string;
-  visitType: string;
-  date: string;
-  duration: string;
-  generatedNote: string;
-  transcript: string;
-  summary: string;
-  audioUrl?: string;
-  template: string;
-}
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { Mic, FileText } from "lucide-react";
 
 export default function DeepAIAudioNotes() {
   const { toast } = useToast();
-  const [notes, setNotes] = useState<Note[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState("soap-general");
   const [customInstructions, setCustomInstructions] = useState("");
-  const [currentSession, setCurrentSession] = useState<SessionData | null>(null);
-  const [viewMode, setViewMode] = useState<"form" | "session">("form");
+  
+  // Patient information form state
+  const [patientName, setPatientName] = useState("");
+  const [visitType, setVisitType] = useState("");
+  const [pronouns, setPronouns] = useState("");
+  const [noteLength, setNoteLength] = useState("");
+  const [pastContext, setPastContext] = useState("");
 
   const handleTemplateChange = (templateId: string, instructions: string) => {
     setSelectedTemplate(templateId);
     setCustomInstructions(instructions);
   };
 
-  const handleSaveNote = (note: { 
-    text: string;
-    audioUrl?: string;
-    visitId?: string;
-    summary?: string;
-    patientName?: string;
-    visitType?: string;
-    pronouns?: string;
-    noteLength?: string;
-    pastContext?: string;
-  }) => {
-    const newNote: Note = {
-      id: `note${notes.length + 1}`,
-      patientId: note.patientName || "unknown",
-      date: new Date().toLocaleDateString(),
-      content: note.text,
-      author: "Dr. Sharma",
-      audioRecording: note.audioUrl || null,
-      summary: note.summary
-    };
-    
-    setNotes([newNote, ...notes]);
+  const handleStartSession = () => {
+    if (!patientName || !visitType) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in patient name and visit type to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    // Create session data for display
-    const sessionData: SessionData = {
-      id: `session-${Date.now()}`,
-      patientName: note.patientName || "Unknown Patient",
-      visitType: note.visitType || "General Visit",
-      date: new Date().toLocaleDateString(),
-      duration: "3 min 45 sec", // This would come from actual recording
-      generatedNote: generateFormattedNote(note),
-      transcript: generateMockTranscript(note),
-      summary: note.summary || "Session completed successfully with comprehensive clinical documentation.",
-      audioUrl: note.audioUrl,
+    // Store session data in localStorage for the new tab
+    const sessionData = {
+      patientName,
+      visitType,
+      pronouns,
+      noteLength,
+      pastContext,
       template: selectedTemplate
     };
 
-    setCurrentSession(sessionData);
-    setViewMode("session");
-    
+    localStorage.setItem('recordingSessionData', JSON.stringify(sessionData));
+
+    // Open new tab with recording session
+    window.open('/recording-session', '_blank');
+
     toast({
-      title: "Audio Note Session Complete",
-      description: "Your audio note has been processed and is ready for review.",
+      title: "Session Started",
+      description: "Recording session opened in new tab",
     });
   };
-
-  const generateFormattedNote = (note: any): string => {
-    return `Summary:
-
-The patient ${note.patientName} presents for ${note.visitType?.toLowerCase()}. Based on the audio documentation and clinical assessment, a comprehensive evaluation was conducted with detailed findings and treatment recommendations.
-
-Subjective:
-
-1. Reason for Visit
-Patient presents with chief complaint as documented during the session. Medical history and current symptoms were thoroughly reviewed.
-
-2. Chief Complaints
-${note.text.substring(0, 200)}... [Generated based on audio transcription]
-
-3. History of Present Illness (HPI)
-Detailed assessment of current condition including onset, duration, severity, and associated factors as captured during the clinical encounter.
-
-4. Impact on Daily Activities
-Patient's functional status and quality of life considerations were evaluated and documented.
-
-Objective:
-
-Physical examination findings and vital signs assessment completed. Clinical observations and diagnostic findings documented based on the encounter.
-
-Assessment:
-
-Clinical assessment and diagnostic considerations based on the subjective and objective findings. Differential diagnosis and risk factors evaluated.
-
-Plan:
-
-Treatment recommendations and follow-up care plan established. Patient education provided and next steps outlined for optimal care management.`;
-  };
-
-  const generateMockTranscript = (note: any): string => {
-    return `Doctor: Good morning, ${note.patientName}. How are you feeling today?
-
-Patient: Good morning, Doctor. I've been having some issues that I wanted to discuss with you.
-
-Doctor: Of course, tell me about what's been bothering you.
-
-Patient: ${note.text.substring(0, 150)}...
-
-Doctor: I see. Let me ask you a few more questions about this. When did you first notice these symptoms?
-
-Patient: It started about a week ago, and it's been getting progressively worse.
-
-Doctor: Based on what you've told me and my examination, I think we have a good understanding of what's going on. Let me explain my assessment and what we should do next.
-
-[Transcript continues with detailed clinical discussion...]
-
-Doctor: Do you have any questions about the treatment plan we've discussed?
-
-Patient: No, I think I understand everything. Thank you for explaining it so clearly.
-
-Doctor: You're welcome. We'll schedule a follow-up appointment to see how you're doing.`;
-  };
-
-  const handleBackToForm = () => {
-    setViewMode("form");
-    setCurrentSession(null);
-  };
-
-  const handlePlayAudio = () => {
-    toast({
-      title: "Playing Audio",
-      description: "Audio recording is now playing...",
-    });
-  };
-
-  if (viewMode === "session" && currentSession) {
-    return (
-      <PageContainer>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={handleBackToForm}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Recording
-            </Button>
-            <PageHeader 
-              title="Session Complete" 
-              description="Review your generated clinical note and transcript"
-            />
-          </div>
-
-          <SessionDisplay 
-            sessionData={currentSession}
-            onPlayAudio={handlePlayAudio}
-          />
-
-          <div className="flex justify-center">
-            <Button onClick={handleBackToForm} size="lg">
-              <Mic className="h-4 w-4 mr-2" />
-              Start New Recording
-            </Button>
-          </div>
-        </div>
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer>
       <div className="p-6 space-y-6">
         <PageHeader 
           title="DeepAI Audio Notes" 
-          description="AI-powered audio note-taking with customizable templates"
+          description="Configure your recording session settings"
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -209,47 +77,118 @@ Doctor: You're welcome. We'll schedule a follow-up appointment to see how you're
               onTemplateChange={handleTemplateChange}
             />
 
-            {/* Audio Form */}
+            {/* Patient Information Form */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-6">Create Audio Note</h2>
-                <DeepAIAudioForm 
-                  patientId=""
-                  onSaveNote={handleSaveNote}
-                />
+                <h2 className="text-xl font-semibold mb-6">Patient Information</h2>
+                
+                <div className="space-y-6">
+                  {/* Patient Information Form */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="patientName">Patient Name: *</Label>
+                      <Input
+                        id="patientName"
+                        value={patientName}
+                        onChange={(e) => setPatientName(e.target.value)}
+                        placeholder="Enter patient name"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="visitType">Visit Type: *</Label>
+                      <Select value={visitType} onValueChange={setVisitType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select visit type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="New Patient">New Patient</SelectItem>
+                          <SelectItem value="Returning Patient">Returning Patient</SelectItem>
+                          <SelectItem value="Follow-up">Follow-up</SelectItem>
+                          <SelectItem value="Consultation">Consultation</SelectItem>
+                          <SelectItem value="Emergency">Emergency</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="pronouns">Pronouns:</Label>
+                      <Select value={pronouns} onValueChange={setPronouns}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select pronouns" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="He/Him">He/Him</SelectItem>
+                          <SelectItem value="She/Her">She/Her</SelectItem>
+                          <SelectItem value="They/Them">They/Them</SelectItem>
+                          <SelectItem value="Unknown">Unknown</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="noteLength">Note Length:</Label>
+                      <Select value={noteLength} onValueChange={setNoteLength}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select note length" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Brief">Brief</SelectItem>
+                          <SelectItem value="Standard">Standard</SelectItem>
+                          <SelectItem value="Detailed">Detailed</SelectItem>
+                          <SelectItem value="Comprehensive">Comprehensive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Past Context */}
+                  <div className="space-y-2">
+                    <Label htmlFor="pastContext">Past note or any context:</Label>
+                    <Textarea
+                      id="pastContext"
+                      value={pastContext}
+                      onChange={(e) => setPastContext(e.target.value)}
+                      placeholder="Add any context that you want to be included in the notes. For example, the patient's chief complaint or any other relevant information."
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  {/* Start Session Button */}
+                  <Button onClick={handleStartSession} className="w-full" size="lg">
+                    <Mic className="h-4 w-4 mr-2" />
+                    Start Recording Session
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Recent Sessions */}
+            {/* Setup Guide */}
             <Card>
               <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-4">Recent Sessions</h3>
-                {notes.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No sessions created yet</p>
-                ) : (
-                  <div className="space-y-4">
-                    {notes.slice(0, 5).map((note) => (
-                      <div key={note.id} className="border rounded-lg p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-medium text-sm">{note.patientId}</span>
-                          <span className="text-xs text-muted-foreground">{note.date}</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {note.content}
-                        </p>
-                        {note.audioRecording && (
-                          <div className="mt-2 flex items-center text-xs text-blue-600">
-                            <FileText className="h-3 w-3 mr-1" />
-                            Session completed
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                <h3 className="text-lg font-semibold mb-4">Setup Guide</h3>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-600">1️⃣</span>
+                    <span>Select your preferred documentation template</span>
                   </div>
-                )}
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600">2️⃣</span>
+                    <span>Fill in patient information (name and visit type required)</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-600">3️⃣</span>
+                    <span>Add any relevant context or background information</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-orange-600">4️⃣</span>
+                    <span>Click "Start Recording Session" to open the recording interface</span>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -260,19 +199,19 @@ Doctor: You're welcome. We'll schedule a follow-up appointment to see how you're
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <div className="flex items-start gap-2">
                     <span className="text-blue-600">💡</span>
-                    <span>Select your preferred template before recording</span>
+                    <span>Ensure microphone access is enabled in your browser</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-green-600">🎯</span>
-                    <span>Customize instructions to match your documentation style</span>
+                    <span>Record in a quiet environment for best transcription quality</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-purple-600">📝</span>
-                    <span>Review generated notes in the session view</span>
+                    <span>The recording session will open in a new tab for easy switching</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">🔄</span>
-                    <span>Create custom templates for specialized visits</span>
+                    <span>You can customize templates to match your documentation style</span>
                   </div>
                 </div>
               </CardContent>
