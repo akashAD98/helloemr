@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail } from "lucide-react";
+import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
 
@@ -21,6 +21,7 @@ interface RecordingSessionProps {
 
 export function RecordingSession({ sessionData }: RecordingSessionProps) {
   const { toast } = useToast();
+  const [mainTab, setMainTab] = useState("note");
   const [activeTab, setActiveTab] = useState("generated");
   const [transcribedText, setTranscribedText] = useState("");
   const [generatedNote, setGeneratedNote] = useState("");
@@ -126,139 +127,192 @@ Chief complaint of a headache that started three days ago with 10 out of 10 inte
           </div>
         </div>
 
-        {/* Recording Controls */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center space-y-4">
-              <Button
-                size="lg"
-                onClick={handleCaptureConversation}
-                disabled={isProcessing}
-                className={`px-8 py-6 text-lg ${
-                  isRecording 
-                    ? "bg-red-500 hover:bg-red-600" 
-                    : "bg-green-500 hover:bg-green-600"
-                }`}
-              >
-                {isRecording ? (
-                  <>
-                    <MicOff className="mr-2 h-5 w-5" />
-                    STOP RECORDING ({formatTime(recordingTime)})
-                  </>
-                ) : (
-                  <>
-                    <Mic className="mr-2 h-5 w-5" />
-                    🎤 CAPTURE CONVERSATION
-                  </>
-                )}
-              </Button>
+        {/* Main Tab Navigation */}
+        <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="timeline" className="flex items-center gap-2">
+              <Paperclip className="h-4 w-4" />
+              Timeline
+            </TabsTrigger>
+            <TabsTrigger value="memos" className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Memos
+            </TabsTrigger>
+            <TabsTrigger value="note" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Note
+            </TabsTrigger>
+          </TabsList>
 
-              {audioUrl && (
-                <Button variant="outline" onClick={playAudio}>
-                  <Play className="mr-2 h-4 w-4" />
-                  Play Recording
-                </Button>
-              )}
+          {/* Timeline Tab */}
+          <TabsContent value="timeline" className="mt-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Timeline View</h3>
+                  <p className="text-muted-foreground">
+                    View the chronological timeline of this session. This feature will show the sequence of events during the recording.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-              {isProcessing && (
-                <div className="text-center text-muted-foreground">
-                  Processing audio and generating notes...
+          {/* Memos Tab */}
+          <TabsContent value="memos" className="mt-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Memos</h3>
+                  <p className="text-muted-foreground">
+                    Quick notes and memos from this session. Add important observations or reminders here.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Note Tab - Main Recording Interface */}
+          <TabsContent value="note" className="mt-6">
+            <div className="space-y-6">
+              {/* Recording Controls */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center space-y-4">
+                    <Button
+                      size="lg"
+                      onClick={handleCaptureConversation}
+                      disabled={isProcessing}
+                      className={`px-8 py-6 text-lg ${
+                        isRecording 
+                          ? "bg-red-500 hover:bg-red-600" 
+                          : "bg-green-500 hover:bg-green-600"
+                      }`}
+                    >
+                      {isRecording ? (
+                        <>
+                          <MicOff className="mr-2 h-5 w-5" />
+                          STOP RECORDING ({formatTime(recordingTime)})
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="mr-2 h-5 w-5" />
+                          🎤 CAPTURE CONVERSATION
+                        </>
+                      )}
+                    </Button>
+
+                    {audioUrl && (
+                      <Button variant="outline" onClick={playAudio}>
+                        <Play className="mr-2 h-4 w-4" />
+                        Play Recording
+                      </Button>
+                    )}
+
+                    {isProcessing && (
+                      <div className="text-center text-muted-foreground">
+                        Processing audio and generating notes...
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Content Tabs */}
+              {(transcribedText || generatedNote) && (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Main Content */}
+                  <div className="lg:col-span-3">
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger 
+                          value="generated" 
+                          className={`${activeTab === 'generated' ? 'bg-green-500 text-white' : ''}`}
+                        >
+                          Generated Note
+                        </TabsTrigger>
+                        <TabsTrigger 
+                          value="transcript"
+                          className={`${activeTab === 'transcript' ? 'bg-green-500 text-white' : ''}`}
+                        >
+                          Transcript
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="generated" className="mt-6">
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="prose prose-sm max-w-none">
+                              <div className="whitespace-pre-line">
+                                {generatedNote}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+
+                      <TabsContent value="transcript" className="mt-6">
+                        <Card>
+                          <CardContent className="p-6">
+                            <div className="bg-gray-50 border rounded-lg p-6">
+                              <p className="text-sm leading-relaxed whitespace-pre-line">
+                                {transcribedText}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+
+                  {/* Sidebar Actions */}
+                  <div className="lg:col-span-1 space-y-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => copyToClipboard(activeTab === 'generated' ? generatedNote : transcribedText, activeTab === 'generated' ? "Generated note" : "Transcript")}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      COPY
+                    </Button>
+                    
+                    <Button variant="outline" className="w-full justify-start">
+                      <Settings className="h-4 w-4 mr-2" />
+                      AI EDIT
+                    </Button>
+                    
+                    <Button variant="outline" className="w-full justify-start">
+                      <FileText className="h-4 w-4 mr-2" />
+                      SWITCH TEMPLATE
+                    </Button>
+                    
+                    <Button variant="outline" className="w-full justify-start">
+                      <History className="h-4 w-4 mr-2" />
+                      VIEW HISTORY
+                    </Button>
+                    
+                    <Button variant="outline" className="w-full justify-start">
+                      <Globe className="h-4 w-4 mr-2" />
+                      CHANGE LANGUAGE
+                    </Button>
+                    
+                    <Button variant="outline" className="w-full justify-start">
+                      <Eye className="h-4 w-4 mr-2" />
+                      SHOW BLANK ITEMS
+                    </Button>
+                    
+                    <Button className="w-full justify-start bg-green-500 hover:bg-green-600">
+                      <Mail className="h-4 w-4 mr-2" />
+                      SEND PATIENT INSTRUCTIONS
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Content Tabs */}
-        {(transcribedText || generatedNote) && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger 
-                    value="generated" 
-                    className={`${activeTab === 'generated' ? 'bg-green-500 text-white' : ''}`}
-                  >
-                    Generated Note
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="transcript"
-                    className={`${activeTab === 'transcript' ? 'bg-green-500 text-white' : ''}`}
-                  >
-                    Transcript
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="generated" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-line">
-                          {generatedNote}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-
-                <TabsContent value="transcript" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="bg-gray-50 border rounded-lg p-6">
-                        <p className="text-sm leading-relaxed whitespace-pre-line">
-                          {transcribedText}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Sidebar Actions */}
-            <div className="lg:col-span-1 space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full justify-start"
-                onClick={() => copyToClipboard(activeTab === 'generated' ? generatedNote : transcribedText, activeTab === 'generated' ? "Generated note" : "Transcript")}
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                COPY
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start">
-                <Settings className="h-4 w-4 mr-2" />
-                AI EDIT
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start">
-                <FileText className="h-4 w-4 mr-2" />
-                SWITCH TEMPLATE
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start">
-                <History className="h-4 w-4 mr-2" />
-                VIEW HISTORY
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start">
-                <Globe className="h-4 w-4 mr-2" />
-                CHANGE LANGUAGE
-              </Button>
-              
-              <Button variant="outline" className="w-full justify-start">
-                <Eye className="h-4 w-4 mr-2" />
-                SHOW BLANK ITEMS
-              </Button>
-              
-              <Button className="w-full justify-start bg-green-500 hover:bg-green-600">
-                <Mail className="h-4 w-4 mr-2" />
-                SEND PATIENT INSTRUCTIONS
-              </Button>
-            </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
