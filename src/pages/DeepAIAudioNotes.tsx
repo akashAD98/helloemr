@@ -30,6 +30,10 @@ export default function DeepAIAudioNotes() {
   };
 
   const handleSaveAndProcess = () => {
+    console.log("Save & Process clicked");
+    console.log("Patient name:", patientName);
+    console.log("Visit type:", visitType);
+    
     if (!patientName || !visitType) {
       toast({
         title: "Missing Information",
@@ -49,10 +53,13 @@ export default function DeepAIAudioNotes() {
       template: selectedTemplate
     };
 
+    console.log("Storing session data:", sessionData);
     localStorage.setItem('recordingSessionData', JSON.stringify(sessionData));
+    console.log("Data stored in localStorage");
 
     // Open new tab with recording session
-    window.open('/recording-session', '_blank');
+    const newTab = window.open('/recording-session', '_blank');
+    console.log("New tab opened:", newTab);
 
     toast({
       title: "Session Prepared",
