@@ -43,7 +43,7 @@ export default function DeepAIAudioNotes() {
       return;
     }
 
-    // Store session data in localStorage for the new tab
+    // Store session data in localStorage for the new window
     const sessionData = {
       patientName,
       visitType,
@@ -57,14 +57,27 @@ export default function DeepAIAudioNotes() {
     localStorage.setItem('recordingSessionData', JSON.stringify(sessionData));
     console.log("Data stored in localStorage");
 
-    // Open new tab with recording session
-    const newTab = window.open('/recording-session', '_blank');
-    console.log("New tab opened:", newTab);
-
-    toast({
-      title: "Session Prepared",
-      description: "Recording session opened in new tab",
-    });
+    // Open new popup window with recording session
+    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    const newWindow = window.open('/recording-session', 'recordingSession', windowFeatures);
+    
+    if (newWindow) {
+      console.log("New popup window opened:", newWindow);
+      // Focus the new window
+      newWindow.focus();
+      
+      toast({
+        title: "Session Prepared",
+        description: "Recording session opened in new window",
+      });
+    } else {
+      // Fallback if popup is blocked
+      toast({
+        title: "Popup Blocked",
+        description: "Please allow popups and try again, or use the recording session in a new tab.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -214,7 +227,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-purple-600">📝</span>
-                    <span>The recording session will open in a new tab for easy switching</span>
+                    <span>The recording session will open in a new window for easy switching</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">🔄</span>
