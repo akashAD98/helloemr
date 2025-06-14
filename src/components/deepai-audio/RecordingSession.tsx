@@ -130,7 +130,8 @@ Schedule appropriate follow-up based on examination findings and treatment respo
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Recording Session - {sessionData.patientName}</h1>
+            <h1 className="text-3xl font-bold text-green-600 mb-2">Welcome to Recording Conversation</h1>
+            <h2 className="text-xl font-semibold">Recording Session - {sessionData.patientName}</h2>
             <p className="text-muted-foreground">
               {sessionData.visitType} • Template: {sessionData.template}
             </p>

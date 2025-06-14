@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -75,13 +74,12 @@ export default function DeepAIAudioNotes() {
     localStorage.setItem('currentSessionKey', sessionKey);
     console.log("Data stored in localStorage with key:", sessionKey);
 
-    // Open new popup window with recording session
-    const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
+    // Open new tab with recording session
     const recordingUrl = `/recording-session?sessionKey=${sessionKey}`;
-    const newWindow = window.open(recordingUrl, 'recordingSession', windowFeatures);
+    const newWindow = window.open(recordingUrl, '_blank');
     
     if (newWindow) {
-      console.log("New popup window opened:", newWindow);
+      console.log("New tab opened successfully");
       
       // Wait a moment for the window to load, then send data via postMessage as backup
       setTimeout(() => {
@@ -96,12 +94,9 @@ export default function DeepAIAudioNotes() {
         }
       }, 1000);
       
-      // Focus the new window
-      newWindow.focus();
-      
       toast({
-        title: "Session Prepared",
-        description: "Recording session opened in new window",
+        title: "Recording Session Started",
+        description: "Recording session opened in new tab",
       });
     } else {
       // Fallback if popup is blocked
@@ -303,7 +298,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-purple-600">📝</span>
-                    <span>The recording session will open in a new window for easy switching</span>
+                    <span>The recording session will open in a new tab for easy switching</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">🔄</span>
