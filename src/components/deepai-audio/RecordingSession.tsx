@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
+import { TemplateSwitcher } from "./TemplateSwitcher";
 
 interface RecordingSessionProps {
   sessionData: {
@@ -26,6 +26,8 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
   const [generatedNote, setGeneratedNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [fullTranscript, setFullTranscript] = useState("");
+  const [currentTemplate, setCurrentTemplate] = useState(sessionData.template);
+  const [templateInstructions, setTemplateInstructions] = useState("");
   
   const { 
     isRecording, 
@@ -40,6 +42,19 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleTemplateChange = (templateId: string, instructions: string) => {
+    setCurrentTemplate(templateId);
+    setTemplateInstructions(instructions);
+    
+    // If we have a generated note, we might want to regenerate it with the new template
+    if (generatedNote) {
+      toast({
+        title: "Template Changed",
+        description: "Template updated. Recording session will use the new template for future generations.",
+      });
+    }
   };
 
   const handleStartRecording = async () => {
@@ -150,7 +165,7 @@ Schedule appropriate follow-up based on examination findings and treatment respo
             <h1 className="text-3xl font-bold text-green-600 mb-2">Welcome to Recording Conversation</h1>
             <h2 className="text-xl font-semibold">Recording Session - {sessionData.patientName}</h2>
             <p className="text-muted-foreground">
-              {sessionData.visitType} • Template: {sessionData.template}
+              {sessionData.visitType} • Template: {currentTemplate}
             </p>
           </div>
           <div className="flex gap-2">
@@ -268,10 +283,15 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                     AI EDIT
                   </Button>
                   
-                  <Button variant="outline" className="w-full justify-start" disabled>
-                    <FileText className="h-4 w-4 mr-2" />
-                    SWITCH TEMPLATE
-                  </Button>
+                  <TemplateSwitcher 
+                    currentTemplate={currentTemplate}
+                    onTemplateChange={handleTemplateChange}
+                  >
+                    <Button variant="outline" className="w-full justify-start">
+                      <FileText className="h-4 w-4 mr-2" />
+                      SWITCH TEMPLATE
+                    </Button>
+                  </TemplateSwitcher>
                   
                   <Button variant="outline" className="w-full justify-start" disabled>
                     <History className="h-4 w-4 mr-2" />
@@ -303,7 +323,7 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                 <div className="space-y-2 text-sm">
                   <div><strong>Patient:</strong> {sessionData.patientName}</div>
                   <div><strong>Visit Type:</strong> {sessionData.visitType}</div>
-                  <div><strong>Template:</strong> {sessionData.template}</div>
+                  <div><strong>Template:</strong> {currentTemplate}</div>
                   {sessionData.pronouns && <div><strong>Pronouns:</strong> {sessionData.pronouns}</div>}
                   {sessionData.noteLength && <div><strong>Note Length:</strong> {sessionData.noteLength}</div>}
                 </div>
