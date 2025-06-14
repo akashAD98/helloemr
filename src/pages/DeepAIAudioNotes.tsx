@@ -43,26 +43,47 @@ export default function DeepAIAudioNotes() {
       return;
     }
 
-    // Store session data in localStorage for the new window
+    // Create session data with timestamp to ensure uniqueness
     const sessionData = {
       patientName,
       visitType,
       pronouns,
       noteLength,
       pastContext,
-      template: selectedTemplate
+      template: selectedTemplate,
+      customInstructions,
+      timestamp: Date.now()
     };
 
     console.log("Storing session data:", sessionData);
-    localStorage.setItem('recordingSessionData', JSON.stringify(sessionData));
-    console.log("Data stored in localStorage");
+    
+    // Store data with a unique key
+    const sessionKey = `recordingSessionData_${sessionData.timestamp}`;
+    localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    localStorage.setItem('currentSessionKey', sessionKey);
+    console.log("Data stored in localStorage with key:", sessionKey);
 
     // Open new popup window with recording session
     const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,status=no';
-    const newWindow = window.open('/recording-session', 'recordingSession', windowFeatures);
+    const recordingUrl = `/recording-session?sessionKey=${sessionKey}`;
+    const newWindow = window.open(recordingUrl, 'recordingSession', windowFeatures);
     
     if (newWindow) {
       console.log("New popup window opened:", newWindow);
+      
+      // Wait a moment for the window to load, then send data via postMessage as backup
+      setTimeout(() => {
+        try {
+          newWindow.postMessage({
+            type: 'SESSION_DATA',
+            data: sessionData
+          }, window.location.origin);
+          console.log("Session data sent via postMessage");
+        } catch (error) {
+          console.log("PostMessage failed, relying on localStorage");
+        }
+      }, 1000);
+      
       // Focus the new window
       newWindow.focus();
       
