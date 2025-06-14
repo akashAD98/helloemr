@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +18,7 @@ type ViewMode = "setup" | "templates";
 
 export default function DeepAIAudioNotes() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>("setup");
   const [selectedTemplate, setSelectedTemplate] = useState("soap-general");
   const [customInstructions, setCustomInstructions] = useState("");
@@ -43,50 +45,42 @@ export default function DeepAIAudioNotes() {
 
   const handleProcessNext = () => {
     console.log("Process Next clicked");
-    
-    // Simple test - open new window with basic HTML content
-    const newWindow = window.open('', '_blank', 'width=800,height=600');
-    
-    if (newWindow) {
-      newWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Audio Record</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background-color: #f5f5f5;
-            }
-            h1 {
-              color: #16a34a;
-              font-size: 2rem;
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Welcome to this audio record</h1>
-        </body>
-        </html>
-      `);
-      newWindow.document.close();
-      
+
+    // Validate required fields
+    if (!patientName.trim() || !visitType) {
       toast({
-        title: "Success",
-        description: "New window opened successfully",
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Could not open new window. Please allow popups.",
+        title: "Missing Required Information",
+        description: "Please fill in Patient Name and Visit Type before proceeding.",
         variant: "destructive"
       });
+      return;
     }
+
+    // Prepare session data
+    const sessionData = {
+      patientName,
+      visitType,
+      pronouns,
+      noteLength,
+      pastContext,
+      template: selectedTemplate,
+      customInstructions
+    };
+
+    console.log("Session data prepared:", sessionData);
+
+    // Store session data in localStorage
+    const sessionKey = `recording-session-${Date.now()}`;
+    localStorage.setItem(sessionKey, JSON.stringify(sessionData));
+    localStorage.setItem('currentSessionKey', sessionKey);
+
+    // Navigate to recording session page
+    navigate(`/recording-session?sessionKey=${sessionKey}`);
+
+    toast({
+      title: "Starting Recording Session",
+      description: "Navigating to recording session...",
+    });
   };
 
   if (viewMode === "templates") {
@@ -258,7 +252,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">4️⃣</span>
-                    <span>Click "Process Next" to open the audio recording window</span>
+                    <span>Click "Process Next" to start the recording session</span>
                   </div>
                 </div>
               </CardContent>
@@ -279,7 +273,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-purple-600">📝</span>
-                    <span>The recording session will open in a new window for easy switching</span>
+                    <span>The recording session will navigate to a dedicated recording page</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">🔄</span>
