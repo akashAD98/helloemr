@@ -4,16 +4,20 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { TemplateSelector } from "@/components/deepai-audio/TemplateSelector";
+import { TemplateManagement } from "@/components/deepai-audio/TemplateManagement";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, Settings, FileText, ArrowLeft } from "lucide-react";
+
+type ViewMode = "setup" | "templates";
 
 export default function DeepAIAudioNotes() {
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState<ViewMode>("setup");
   const [selectedTemplate, setSelectedTemplate] = useState("soap-general");
   const [customInstructions, setCustomInstructions] = useState("");
   
@@ -27,6 +31,14 @@ export default function DeepAIAudioNotes() {
   const handleTemplateChange = (templateId: string, instructions: string) => {
     setSelectedTemplate(templateId);
     setCustomInstructions(instructions);
+  };
+
+  const handleManageTemplates = () => {
+    setViewMode("templates");
+  };
+
+  const handleBackToSetup = () => {
+    setViewMode("setup");
   };
 
   const handleSaveAndProcess = () => {
@@ -101,22 +113,57 @@ export default function DeepAIAudioNotes() {
     }
   };
 
+  if (viewMode === "templates") {
+    return (
+      <PageContainer>
+        <div className="p-6">
+          <TemplateManagement
+            selectedTemplate={selectedTemplate}
+            onSelectTemplate={setSelectedTemplate}
+            onBackToSetup={handleBackToSetup}
+          />
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       <div className="p-6 space-y-6">
-        <PageHeader 
-          title="DeepAI Audio Notes" 
-          description="Configure your recording session settings"
-        />
+        <div className="flex items-center justify-between">
+          <PageHeader 
+            title="DeepAI Audio Notes" 
+            description="Configure your recording session settings"
+          />
+          <Button 
+            variant="outline" 
+            onClick={handleManageTemplates}
+            className="flex items-center gap-2"
+          >
+            <FileText className="h-4 w-4" />
+            My Templates
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Template Selection */}
-            <TemplateSelector
-              selectedTemplate={selectedTemplate}
-              onTemplateChange={handleTemplateChange}
-            />
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Template Selection</h2>
+                  <Button variant="outline" size="sm" onClick={handleManageTemplates}>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage Templates
+                  </Button>
+                </div>
+                <TemplateSelector
+                  selectedTemplate={selectedTemplate}
+                  onTemplateChange={handleTemplateChange}
+                />
+              </CardContent>
+            </Card>
 
             {/* Patient Information Form */}
             <Card>
@@ -132,7 +179,7 @@ export default function DeepAIAudioNotes() {
                         id="patientName"
                         value={patientName}
                         onChange={(e) => setPatientName(e.target.value)}
-                        placeholder="Enter patient name"
+                        placeholder="Search existing or create new"
                         required
                       />
                     </div>
@@ -196,10 +243,18 @@ export default function DeepAIAudioNotes() {
                     />
                   </div>
 
+                  {/* Microphone Access Warning */}
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-orange-800">
+                      <span>⚠️</span>
+                      <span className="text-sm">Microphone access needed. Click to enable or update settings.</span>
+                    </div>
+                  </div>
+
                   {/* Save & Process Button */}
-                  <Button onClick={handleSaveAndProcess} className="w-full" size="lg">
+                  <Button onClick={handleSaveAndProcess} className="w-full bg-green-500 hover:bg-green-600" size="lg">
                     <Save className="h-4 w-4 mr-2" />
-                    Save & Process
+                    🎤 CAPTURE CONVERSATION
                   </Button>
                 </div>
               </CardContent>
@@ -227,7 +282,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">4️⃣</span>
-                    <span>Click "Save & Process" to open the recording interface</span>
+                    <span>Click "Capture Conversation" to start recording</span>
                   </div>
                 </div>
               </CardContent>
