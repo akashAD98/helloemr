@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -40,69 +41,49 @@ export default function DeepAIAudioNotes() {
     setViewMode("setup");
   };
 
-  const handleSaveAndProcess = () => {
-    console.log("Save & Process clicked");
-    console.log("Patient name:", patientName);
-    console.log("Visit type:", visitType);
+  const handleProcessNext = () => {
+    console.log("Process Next clicked");
     
-    if (!patientName || !visitType) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in patient name and visit type to continue.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Create session data with timestamp to ensure uniqueness
-    const sessionData = {
-      patientName,
-      visitType,
-      pronouns,
-      noteLength,
-      pastContext,
-      template: selectedTemplate,
-      customInstructions,
-      timestamp: Date.now()
-    };
-
-    console.log("Storing session data:", sessionData);
-    
-    // Store data with a unique key
-    const sessionKey = `recordingSessionData_${sessionData.timestamp}`;
-    localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-    localStorage.setItem('currentSessionKey', sessionKey);
-    console.log("Data stored in localStorage with key:", sessionKey);
-
-    // Open new tab with recording session
-    const recordingUrl = `/recording-session?sessionKey=${sessionKey}`;
-    const newWindow = window.open(recordingUrl, '_blank');
+    // Simple test - open new window with basic HTML content
+    const newWindow = window.open('', '_blank', 'width=800,height=600');
     
     if (newWindow) {
-      console.log("New tab opened successfully");
-      
-      // Wait a moment for the window to load, then send data via postMessage as backup
-      setTimeout(() => {
-        try {
-          newWindow.postMessage({
-            type: 'SESSION_DATA',
-            data: sessionData
-          }, window.location.origin);
-          console.log("Session data sent via postMessage");
-        } catch (error) {
-          console.log("PostMessage failed, relying on localStorage");
-        }
-      }, 1000);
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Audio Record</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+              margin: 0;
+              background-color: #f5f5f5;
+            }
+            h1 {
+              color: #16a34a;
+              font-size: 2rem;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Welcome to this audio record</h1>
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
       
       toast({
-        title: "Recording Session Started",
-        description: "Recording session opened in new tab",
+        title: "Success",
+        description: "New window opened successfully",
       });
     } else {
-      // Fallback if popup is blocked
       toast({
-        title: "Popup Blocked",
-        description: "Please allow popups and try again, or use the recording session in a new tab.",
+        title: "Error",
+        description: "Could not open new window. Please allow popups.",
         variant: "destructive"
       });
     }
@@ -246,10 +227,10 @@ export default function DeepAIAudioNotes() {
                     </div>
                   </div>
 
-                  {/* Save & Process Button */}
-                  <Button onClick={handleSaveAndProcess} className="w-full bg-green-500 hover:bg-green-600" size="lg">
+                  {/* Process Next Button */}
+                  <Button onClick={handleProcessNext} className="w-full bg-green-500 hover:bg-green-600" size="lg">
                     <Save className="h-4 w-4 mr-2" />
-                    🎤 CAPTURE CONVERSATION
+                    🎤 PROCESS NEXT
                   </Button>
                 </div>
               </CardContent>
@@ -277,7 +258,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">4️⃣</span>
-                    <span>Click "Capture Conversation" to start recording</span>
+                    <span>Click "Process Next" to open the audio recording window</span>
                   </div>
                 </div>
               </CardContent>
@@ -298,7 +279,7 @@ export default function DeepAIAudioNotes() {
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-purple-600">📝</span>
-                    <span>The recording session will open in a new tab for easy switching</span>
+                    <span>The recording session will open in a new window for easy switching</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-orange-600">🔄</span>
