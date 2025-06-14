@@ -1,5 +1,5 @@
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare, Edit, Send, Languages } from "lucide-react";
+import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare, Edit, Send, Languages, ArrowLeft, Home } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
 import { TemplateSwitcher } from "./TemplateSwitcher";
@@ -26,7 +26,9 @@ interface RecordingSessionProps {
 }
 
 export function RecordingSession({ sessionData }: RecordingSessionProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
+  
   const [mainTab, setMainTab] = useState("note");
   const [activeTab, setActiveTab] = useState("generated");
   const [generatedNote, setGeneratedNote] = useState("");
@@ -57,6 +59,14 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     playAudio
   } = useAudioRecording();
 
+  const handleBackToMain = () => {
+    navigate('/deepai-audio-notes');
+    toast({
+      title: "Returning to setup",
+      description: "Navigating back to the main DeepAI Audio Notes page",
+    });
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -81,11 +91,18 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
       await startRecording();
       setActiveTab("transcript");
       
+      toast({
+        title: "Recording Started",
+        description: "Conversation is being recorded and transcribed in real-time",
+      });
+      
       const mockTranscriptUpdates = [
         "You: Miss Bellamy? Yes, Hi, I'm Honey Harris. I'll be your doctor today. Let me just wash my hands really quick. Would you prefer Mrs. Bellamy, or can I call you Pat? Pat's fine. Great. Well, it's nice to meet you. Nice to meet you too. Can you tell me why you're here today?",
-        "\n\nPatient: I have a terrible headache.",
-        "\n\nYou: It looks really bad. Is there anything else besides your headache that you want to address here today at the Clinical partner?",
-        "\n\nPatient: No, it's just that. Except I am concerned. I just recently changed insurance companies and I'm not sure this is going to be covered yet."
+        "\n\nPatient: I have a terrible headache that started three days ago. It's really severe, about 10 out of 10 pain.",
+        "\n\nYou: I'm sorry to hear that. Can you describe the headache? Is it throbbing, sharp, or dull? Does anything make it better or worse?",
+        "\n\nPatient: It's throbbing and gets much worse when I move or when there's bright light. I also feel nauseous.",
+        "\n\nYou: That sounds very uncomfortable. Have you taken any medications for this? Any other symptoms I should know about?",
+        "\n\nPatient: I tried some over-the-counter pain relievers but they didn't help much. I'm also concerned about my insurance coverage since I recently switched plans."
       ];
 
       let currentTranscript = "";
@@ -93,7 +110,7 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
         setTimeout(() => {
           currentTranscript += update;
           setFullTranscript(currentTranscript);
-        }, (index + 1) * 2000);
+        }, (index + 1) * 3000);
       });
 
     } catch (error) {
@@ -110,45 +127,54 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     stopRecording();
     setIsProcessing(true);
     
+    toast({
+      title: "Processing Recording",
+      description: "Generating clinical note from your conversation...",
+    });
+    
     setTimeout(() => {
-      const mockNote = `Summary
+      const mockNote = `CLINICAL NOTE - ${sessionData.patientName}
+Visit Date: ${new Date().toLocaleDateString()}
+Visit Type: ${sessionData.visitType}
+Template: ${currentTemplate}
 
-The patient was seen for a follow-up regarding a severe headache of recent onset. Clinical assessment suggests a migraine, exacerbated by movement and light, and impacting daily activities. A plan is in place for further assessment and management, which includes ensuring insurance coverage for tests, as well as lifestyle recommendations to aid long-term health, such as smoking reduction.
+SUMMARY
+The patient was seen for evaluation of a severe headache of 3-day duration. Clinical presentation is consistent with migraine headache based on throbbing quality, photophobia, phonophobia, and associated nausea. Patient reports 10/10 pain intensity with functional impairment. Insurance coverage concerns were addressed.
 
-Subjective
+SUBJECTIVE
+Chief Complaint: Severe headache x 3 days
 
-1. Reason for Visit
-Patient presents with a severe headache.
+History of Present Illness:
+- 3-day history of severe headache, 10/10 intensity
+- Throbbing quality
+- Exacerbated by movement and bright lights
+- Associated with nausea
+- No relief with OTC analgesics
+- Patient concerned about insurance coverage
 
-2. Chief Complaints
-Chief complaint of a headache that started three days ago with 10 out of 10 intensity, worsened by movement and light.
+Review of Systems:
+- Neurological: Headache, photophobia, nausea
+- Other systems: Negative per conversation
 
-3. History of Present Illness (HPI)
-Patient reports severe headache lasting three days with 10/10 intensity. Pain is exacerbated by movement and bright light. Associated symptoms include nausea and photophobia. Patient expresses concern about insurance coverage for treatment.
+OBJECTIVE
+Vital Signs: To be documented
+Physical Examination: Clinical assessment in progress
 
-Objective
+ASSESSMENT
+1. Severe headache, likely migraine
+   - 3-day duration with classic migraine features
+   - Throbbing quality with photophobia and nausea
+   - Functional impairment noted
 
-1. Vital Signs
-Not documented during this session.
+PLAN
+1. Complete physical examination
+2. Consider migraine-specific therapy
+3. Address insurance verification for diagnostic studies if indicated
+4. Patient education regarding migraine triggers
+5. Follow-up as clinically indicated
+6. Return precautions discussed
 
-2. Physical Examination
-Initial examination planned to assess migraine symptoms.
-
-Assessment
-
-1. Primary Assessment
-Severe headache consistent with migraine presentation based on symptoms of photophobia, nausea, and movement-related exacerbation.
-
-Plan
-
-1. Further Evaluation
-Clinical examination to be completed to confirm migraine diagnosis.
-
-2. Insurance Verification
-Address patient's concerns regarding insurance coverage for diagnostic tests and treatment.
-
-3. Follow-up
-Schedule appropriate follow-up based on examination findings and treatment response.`;
+Patient expressed understanding of the plan and agreed to proceed.`;
 
       setGeneratedNote(mockNote);
       
@@ -162,7 +188,12 @@ Schedule appropriate follow-up based on examination findings and treatment respo
       
       setIsProcessing(false);
       setActiveTab("generated");
-    }, 3000);
+      
+      toast({
+        title: "Note Generated Successfully",
+        description: "Clinical note has been created from your recording",
+      });
+    }, 4000);
   };
 
   const handleCaptureConversation = () => {
@@ -312,15 +343,26 @@ Schedule appropriate follow-up based on examination findings and treatment respo
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-green-600 mb-2">Welcome to Recording Conversation</h1>
-            <h2 className="text-xl font-semibold">Recording Session - {sessionData.patientName}</h2>
-            <p className="text-muted-foreground">
-              {sessionData.visitType} • Template: {currentTemplate}
-            </p>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="outline" 
+              onClick={handleBackToMain}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Setup
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-green-600 mb-2">🎤 Recording Session</h1>
+              <h2 className="text-xl font-semibold">{sessionData.patientName}</h2>
+              <p className="text-muted-foreground">
+                {sessionData.visitType} • Template: {currentTemplate}
+              </p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
+              <History className="h-4 w-4 mr-2" />
               PATIENT HISTORY
             </Button>
             <Button 
@@ -330,22 +372,48 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                 isRecording 
                   ? "bg-red-500 hover:bg-red-600" 
                   : "bg-green-500 hover:bg-green-600"
-              }`}
+              } px-6 py-3 text-lg font-semibold`}
+              size="lg"
             >
               {isRecording ? (
                 <>
-                  <MicOff className="h-4 w-4 mr-2" />
+                  <MicOff className="h-5 w-5 mr-2" />
                   STOP RECORDING ({formatTime(recordingTime)})
                 </>
               ) : (
                 <>
-                  <Mic className="h-4 w-4 mr-2" />
-                  START AUDIO RECORDING
+                  <Mic className="h-5 w-5 mr-2" />
+                  START RECORDING
                 </>
               )}
             </Button>
           </div>
         </div>
+
+        {/* Recording Status Banner */}
+        {isRecording && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="text-red-800 font-semibold">RECORDING ACTIVE</span>
+              </div>
+              <span className="text-red-600">Duration: {formatTime(recordingTime)}</span>
+              <span className="text-red-600 text-sm">• Speak clearly for best transcription quality</span>
+            </div>
+          </div>
+        )}
+
+        {/* Processing Banner */}
+        {isProcessing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+              <span className="text-blue-800 font-semibold">PROCESSING RECORDING</span>
+              <span className="text-blue-600">• Transcribing and generating clinical note...</span>
+            </div>
+          </div>
+        )}
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -360,13 +428,17 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                         value="generated" 
                         className={`${activeTab === 'generated' ? 'bg-green-500 text-white' : ''}`}
                       >
+                        <FileText className="h-4 w-4 mr-2" />
                         Generated Note
+                        {generatedNote && <Badge variant="secondary" className="ml-2">Ready</Badge>}
                       </TabsTrigger>
                       <TabsTrigger 
                         value="transcript"
                         className={`${activeTab === 'transcript' ? 'bg-green-500 text-white' : ''}`}
                       >
-                        Full Transcript
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Live Transcript
+                        {isRecording && <Badge variant="destructive" className="ml-2">Live</Badge>}
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -377,11 +449,12 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                         <div className="text-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto mb-4"></div>
                           <p className="text-muted-foreground">Generating clinical note...</p>
+                          <p className="text-sm text-muted-foreground mt-2">This may take a few moments</p>
                         </div>
                       </div>
                     ) : generatedNote ? (
                       <div className="prose prose-sm max-w-none">
-                        <div className="whitespace-pre-line text-sm">
+                        <div className="whitespace-pre-line text-sm leading-relaxed">
                           {generatedNote}
                         </div>
                       </div>
@@ -389,7 +462,17 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center text-muted-foreground">
                           <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>Start recording to generate clinical notes</p>
+                          <p className="text-lg font-medium">Ready to Generate Clinical Notes</p>
+                          <p className="mt-2">Start recording your conversation to automatically generate structured clinical documentation</p>
+                          <div className="mt-4 p-4 bg-green-50 rounded-lg text-left">
+                            <h4 className="font-medium text-green-800 mb-2">What happens next:</h4>
+                            <ul className="text-sm text-green-700 space-y-1">
+                              <li>• Click "Start Recording" to begin capturing audio</li>
+                              <li>• Speak naturally during your patient interaction</li>
+                              <li>• AI will transcribe and structure your notes automatically</li>
+                              <li>• Review and edit the generated clinical note as needed</li>
+                            </ul>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -397,14 +480,26 @@ Schedule appropriate follow-up based on examination findings and treatment respo
 
                   <TabsContent value="transcript" className="mt-0 h-[calc(100%-120px)] overflow-y-auto p-4">
                     {fullTranscript ? (
-                      <div className="text-sm leading-relaxed whitespace-pre-line">
+                      <div className="text-sm leading-relaxed whitespace-pre-line font-mono">
                         {fullTranscript}
+                        {isRecording && (
+                          <span className="inline-block w-2 h-4 bg-green-500 animate-pulse ml-1"></span>
+                        )}
                       </div>
                     ) : (
                       <div className="text-center text-muted-foreground">
                         <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Full conversation transcript will appear here</p>
-                        <p className="text-sm mt-2">Start recording to see the transcript</p>
+                        <p className="text-lg font-medium">Real-Time Transcription</p>
+                        <p className="mt-2">Your conversation will appear here in real-time as you speak</p>
+                        {!isRecording && (
+                          <Button 
+                            onClick={handleStartRecording} 
+                            className="mt-4 bg-green-500 hover:bg-green-600"
+                          >
+                            <Mic className="h-4 w-4 mr-2" />
+                            Start Recording Now
+                          </Button>
+                        )}
                       </div>
                     )}
                   </TabsContent>
@@ -417,12 +512,16 @@ Schedule appropriate follow-up based on examination findings and treatment respo
           <div className="lg:col-span-1 space-y-3">
             <Card>
               <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Actions</h3>
+                <h3 className="font-medium mb-3 flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Quick Actions
+                </h3>
                 <div className="space-y-2">
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={handleCopyNote}
+                    disabled={!generatedNote}
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     COPY NOTE
@@ -432,8 +531,9 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                     variant="outline" 
                     className="w-full justify-start"
                     onClick={handleAIEdit}
+                    disabled={!generatedNote}
                   >
-                    <Settings className="h-4 w-4 mr-2" />
+                    <Edit className="h-4 w-4 mr-2" />
                     AI EDIT
                   </Button>
                   
@@ -453,7 +553,7 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                     onClick={handleViewHistory}
                   >
                     <History className="h-4 w-4 mr-2" />
-                    VIEW HISTORY
+                    VIEW HISTORY ({sessionHistory.length})
                   </Button>
                   
                   <Dialog>
@@ -503,6 +603,7 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                   <Button 
                     className="w-full justify-start bg-green-500 hover:bg-green-600"
                     onClick={handleSendPatientInstructions}
+                    disabled={!generatedNote}
                   >
                     <Mail className="h-4 w-4 mr-2" />
                     SEND PATIENT INSTRUCTIONS
@@ -514,7 +615,7 @@ Schedule appropriate follow-up based on examination findings and treatment respo
             {/* Session Info */}
             <Card>
               <CardContent className="p-4">
-                <h3 className="font-medium mb-3">Session Info</h3>
+                <h3 className="font-medium mb-3">Session Details</h3>
                 <div className="space-y-2 text-sm">
                   <div><strong>Patient:</strong> {sessionData.patientName}</div>
                   <div><strong>Visit Type:</strong> {sessionData.visitType}</div>
@@ -522,8 +623,24 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                   {sessionData.pronouns && <div><strong>Pronouns:</strong> {sessionData.pronouns}</div>}
                   {sessionData.noteLength && <div><strong>Note Length:</strong> {sessionData.noteLength}</div>}
                   <div><strong>Language:</strong> {selectedLanguage === "en" ? "English" : selectedLanguage}</div>
-                  <div><strong>History Items:</strong> {sessionHistory.length}</div>
+                  <div><strong>Status:</strong> 
+                    <Badge variant={isRecording ? "destructive" : generatedNote ? "default" : "secondary"} className="ml-2">
+                      {isRecording ? "Recording" : generatedNote ? "Note Ready" : "Ready to Record"}
+                    </Badge>
+                  </div>
                 </div>
+                
+                {audioUrl && (
+                  <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Last Recording</span>
+                      <Button size="sm" variant="outline" onClick={playAudio}>
+                        <Play className="h-3 w-3 mr-1" />
+                        Play
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
