@@ -1,9 +1,15 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare, Edit, Send, Languages } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
 import { TemplateSwitcher } from "./TemplateSwitcher";
@@ -28,6 +34,19 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
   const [fullTranscript, setFullTranscript] = useState("");
   const [currentTemplate, setCurrentTemplate] = useState(sessionData.template);
   const [templateInstructions, setTemplateInstructions] = useState("");
+  const [showBlankItems, setShowBlankItems] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [sessionHistory, setSessionHistory] = useState<Array<{id: string, note: string, timestamp: string}>>([]);
+  
+  // AI Edit dialog states
+  const [isAIEditOpen, setIsAIEditOpen] = useState(false);
+  const [aiEditPrompt, setAiEditPrompt] = useState("");
+  const [isAIEditing, setIsAIEditing] = useState(false);
+  
+  // Patient instructions dialog states
+  const [isPatientInstructionsOpen, setIsPatientInstructionsOpen] = useState(false);
+  const [patientEmail, setPatientEmail] = useState("");
+  const [instructionsText, setInstructionsText] = useState("");
   
   const { 
     isRecording, 
@@ -48,7 +67,6 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     setCurrentTemplate(templateId);
     setTemplateInstructions(instructions);
     
-    // If we have a generated note, we might want to regenerate it with the new template
     if (generatedNote) {
       toast({
         title: "Template Changed",
@@ -61,9 +79,8 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       await startRecording();
-      setActiveTab("transcript"); // Switch to transcript view when recording starts
+      setActiveTab("transcript");
       
-      // Simulate real-time transcript updates
       const mockTranscriptUpdates = [
         "You: Miss Bellamy? Yes, Hi, I'm Honey Harris. I'll be your doctor today. Let me just wash my hands really quick. Would you prefer Mrs. Bellamy, or can I call you Pat? Pat's fine. Great. Well, it's nice to meet you. Nice to meet you too. Can you tell me why you're here today?",
         "\n\nPatient: I have a terrible headache.",
@@ -93,7 +110,6 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
     stopRecording();
     setIsProcessing(true);
     
-    // Simulate AI note generation
     setTimeout(() => {
       const mockNote = `Summary
 
@@ -135,8 +151,17 @@ Address patient's concerns regarding insurance coverage for diagnostic tests and
 Schedule appropriate follow-up based on examination findings and treatment response.`;
 
       setGeneratedNote(mockNote);
+      
+      // Add to history
+      const newHistoryItem = {
+        id: Date.now().toString(),
+        note: mockNote,
+        timestamp: new Date().toLocaleString()
+      };
+      setSessionHistory(prev => [newHistoryItem, ...prev]);
+      
       setIsProcessing(false);
-      setActiveTab("generated"); // Switch to generated note view when processing is complete
+      setActiveTab("generated");
     }, 3000);
   };
 
@@ -154,6 +179,132 @@ Schedule appropriate follow-up based on examination findings and treatment respo
       title: "Copied to clipboard",
       description: `${label} copied successfully`,
     });
+  };
+
+  const handleCopyNote = () => {
+    if (generatedNote) {
+      copyToClipboard(generatedNote, "Generated note");
+    } else {
+      toast({
+        title: "No note to copy",
+        description: "Generate a note first by recording a conversation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAIEdit = () => {
+    if (!generatedNote) {
+      toast({
+        title: "No note to edit",
+        description: "Generate a note first by recording a conversation",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsAIEditOpen(true);
+  };
+
+  const processAIEdit = () => {
+    if (!aiEditPrompt.trim()) {
+      toast({
+        title: "Enter edit instructions",
+        description: "Please provide instructions for how to edit the note",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAIEditing(true);
+    
+    // Simulate AI editing process
+    setTimeout(() => {
+      const editedNote = generatedNote + "\n\n[AI EDIT APPLIED]\nNote edited based on: " + aiEditPrompt;
+      setGeneratedNote(editedNote);
+      
+      // Add to history
+      const newHistoryItem = {
+        id: Date.now().toString(),
+        note: editedNote,
+        timestamp: new Date().toLocaleString()
+      };
+      setSessionHistory(prev => [newHistoryItem, ...prev]);
+      
+      setIsAIEditing(false);
+      setIsAIEditOpen(false);
+      setAiEditPrompt("");
+      
+      toast({
+        title: "Note edited successfully",
+        description: "AI has applied your requested changes",
+      });
+    }, 2000);
+  };
+
+  const handleViewHistory = () => {
+    if (sessionHistory.length === 0) {
+      toast({
+        title: "No history available",
+        description: "Generate some notes first to see the history",
+      });
+    } else {
+      toast({
+        title: "History",
+        description: `You have ${sessionHistory.length} previous versions`,
+      });
+    }
+  };
+
+  const handleLanguageChange = () => {
+    toast({
+      title: "Language changed",
+      description: `Changed to ${selectedLanguage === "en" ? "English" : "Selected language"}`,
+    });
+  };
+
+  const toggleBlankItems = () => {
+    setShowBlankItems(!showBlankItems);
+    toast({
+      title: showBlankItems ? "Hiding blank items" : "Showing blank items",
+      description: showBlankItems ? "Empty sections are now hidden" : "Empty sections are now visible",
+    });
+  };
+
+  const handleSendPatientInstructions = () => {
+    if (!generatedNote) {
+      toast({
+        title: "No note available",
+        description: "Generate a note first to send patient instructions",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsPatientInstructionsOpen(true);
+    
+    // Pre-fill instructions based on the note
+    setInstructionsText("Based on your visit today:\n\n• Continue current medications as prescribed\n• Follow up in 2 weeks\n• Contact us if symptoms worsen\n\nPlease don't hesitate to reach out with any questions.");
+  };
+
+  const sendInstructions = () => {
+    if (!patientEmail.trim() || !instructionsText.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and instructions",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Simulate sending email
+    setTimeout(() => {
+      toast({
+        title: "Instructions sent",
+        description: `Patient instructions sent to ${patientEmail}`,
+      });
+      setIsPatientInstructionsOpen(false);
+      setPatientEmail("");
+      setInstructionsText("");
+    }, 1000);
   };
 
   return (
@@ -271,14 +422,17 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                   <Button 
                     variant="outline" 
                     className="w-full justify-start"
-                    onClick={() => copyToClipboard(generatedNote, "Generated note")}
-                    disabled={!generatedNote}
+                    onClick={handleCopyNote}
                   >
                     <Copy className="h-4 w-4 mr-2" />
                     COPY NOTE
                   </Button>
                   
-                  <Button variant="outline" className="w-full justify-start" disabled>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={handleAIEdit}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     AI EDIT
                   </Button>
@@ -293,22 +447,63 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                     </Button>
                   </TemplateSwitcher>
                   
-                  <Button variant="outline" className="w-full justify-start" disabled>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={handleViewHistory}
+                  >
                     <History className="h-4 w-4 mr-2" />
                     VIEW HISTORY
                   </Button>
                   
-                  <Button variant="outline" className="w-full justify-start" disabled>
-                    <Globe className="h-4 w-4 mr-2" />
-                    CHANGE LANGUAGE
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start">
+                        <Globe className="h-4 w-4 mr-2" />
+                        CHANGE LANGUAGE
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Change Language</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="language">Select Language</Label>
+                          <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="en">English</SelectItem>
+                              <SelectItem value="es">Spanish</SelectItem>
+                              <SelectItem value="fr">French</SelectItem>
+                              <SelectItem value="de">German</SelectItem>
+                              <SelectItem value="it">Italian</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Button onClick={handleLanguageChange} className="w-full">
+                          <Languages className="h-4 w-4 mr-2" />
+                          Apply Language Change
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                   
-                  <Button variant="outline" className="w-full justify-start" disabled>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start"
+                    onClick={toggleBlankItems}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
-                    SHOW BLANK ITEMS
+                    {showBlankItems ? 'HIDE' : 'SHOW'} BLANK ITEMS
                   </Button>
                   
-                  <Button className="w-full justify-start bg-green-500 hover:bg-green-600" disabled>
+                  <Button 
+                    className="w-full justify-start bg-green-500 hover:bg-green-600"
+                    onClick={handleSendPatientInstructions}
+                  >
                     <Mail className="h-4 w-4 mr-2" />
                     SEND PATIENT INSTRUCTIONS
                   </Button>
@@ -326,11 +521,105 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                   <div><strong>Template:</strong> {currentTemplate}</div>
                   {sessionData.pronouns && <div><strong>Pronouns:</strong> {sessionData.pronouns}</div>}
                   {sessionData.noteLength && <div><strong>Note Length:</strong> {sessionData.noteLength}</div>}
+                  <div><strong>Language:</strong> {selectedLanguage === "en" ? "English" : selectedLanguage}</div>
+                  <div><strong>History Items:</strong> {sessionHistory.length}</div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* AI Edit Dialog */}
+        <Dialog open={isAIEditOpen} onOpenChange={setIsAIEditOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Edit className="h-5 w-5" />
+                AI Edit Note
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="aiEditPrompt">Edit Instructions</Label>
+                <Textarea
+                  id="aiEditPrompt"
+                  value={aiEditPrompt}
+                  onChange={(e) => setAiEditPrompt(e.target.value)}
+                  placeholder="Tell the AI how you want to edit the note... (e.g., 'Add more detail to the assessment section' or 'Make the plan more specific')"
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={processAIEdit}
+                  disabled={isAIEditing}
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  {isAIEditing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Apply Edit
+                    </>
+                  )}
+                </Button>
+                <Button variant="outline" onClick={() => setIsAIEditOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Patient Instructions Dialog */}
+        <Dialog open={isPatientInstructionsOpen} onOpenChange={setIsPatientInstructionsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Send Patient Instructions
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="patientEmail">Patient Email</Label>
+                <Input
+                  id="patientEmail"
+                  type="email"
+                  value={patientEmail}
+                  onChange={(e) => setPatientEmail(e.target.value)}
+                  placeholder="patient@example.com"
+                />
+              </div>
+              <div>
+                <Label htmlFor="instructionsText">Instructions</Label>
+                <Textarea
+                  id="instructionsText"
+                  value={instructionsText}
+                  onChange={(e) => setInstructionsText(e.target.value)}
+                  placeholder="Enter patient instructions..."
+                  className="min-h-[120px]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={sendInstructions}
+                  className="bg-green-500 hover:bg-green-600"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Instructions
+                </Button>
+                <Button variant="outline" onClick={() => setIsPatientInstructionsOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
