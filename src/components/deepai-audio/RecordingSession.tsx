@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, FileText, Mic, MicOff, Play, Settings, History, Eye, Globe, Mail, Paperclip, Clock, MessageSquare } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAudioRecording } from "@/components/patient-details/audio-notes/useAudioRecording";
-import { RealTimeTranscription } from "./RealTimeTranscription";
 
 interface RecordingSessionProps {
   sessionData: {
@@ -23,9 +22,10 @@ interface RecordingSessionProps {
 export function RecordingSession({ sessionData }: RecordingSessionProps) {
   const { toast } = useToast();
   const [mainTab, setMainTab] = useState("note");
-  const [activeTab, setActiveTab] = useState("transcript");
+  const [activeTab, setActiveTab] = useState("generated");
   const [generatedNote, setGeneratedNote] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [fullTranscript, setFullTranscript] = useState("");
   
   const { 
     isRecording, 
@@ -47,6 +47,23 @@ export function RecordingSession({ sessionData }: RecordingSessionProps) {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       await startRecording();
       setActiveTab("transcript"); // Switch to transcript view when recording starts
+      
+      // Simulate real-time transcript updates
+      const mockTranscriptUpdates = [
+        "You: Miss Bellamy? Yes, Hi, I'm Honey Harris. I'll be your doctor today. Let me just wash my hands really quick. Would you prefer Mrs. Bellamy, or can I call you Pat? Pat's fine. Great. Well, it's nice to meet you. Nice to meet you too. Can you tell me why you're here today?",
+        "\n\nPatient: I have a terrible headache.",
+        "\n\nYou: It looks really bad. Is there anything else besides your headache that you want to address here today at the Clinical partner?",
+        "\n\nPatient: No, it's just that. Except I am concerned. I just recently changed insurance companies and I'm not sure this is going to be covered yet."
+      ];
+
+      let currentTranscript = "";
+      mockTranscriptUpdates.forEach((update, index) => {
+        setTimeout(() => {
+          currentTranscript += update;
+          setFullTranscript(currentTranscript);
+        }, (index + 1) * 2000);
+      });
+
     } catch (error) {
       console.error("Microphone access denied:", error);
       toast({
@@ -166,17 +183,9 @@ Schedule appropriate follow-up based on examination findings and treatment respo
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Transcription */}
-          <div className="lg:col-span-1">
-            <RealTimeTranscription 
-              isRecording={isRecording} 
-              recordingTime={recordingTime}
-            />
-          </div>
-
-          {/* Middle Column - Generated Note/Transcript */}
-          <div className="lg:col-span-1">
-            <Card className="h-[400px]">
+          {/* Main Column - Generated Note/Transcript */}
+          <div className="lg:col-span-2">
+            <Card className="h-[600px]">
               <CardContent className="p-0 h-full">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
                   <div className="p-4 border-b">
@@ -221,11 +230,17 @@ Schedule appropriate follow-up based on examination findings and treatment respo
                   </TabsContent>
 
                   <TabsContent value="transcript" className="mt-0 h-[calc(100%-120px)] overflow-y-auto p-4">
-                    <div className="text-center text-muted-foreground">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                      <p>Full conversation transcript will appear here</p>
-                      <p className="text-sm mt-2">Live transcription is shown in the left panel</p>
-                    </div>
+                    {fullTranscript ? (
+                      <div className="text-sm leading-relaxed whitespace-pre-line">
+                        {fullTranscript}
+                      </div>
+                    ) : (
+                      <div className="text-center text-muted-foreground">
+                        <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Full conversation transcript will appear here</p>
+                        <p className="text-sm mt-2">Start recording to see the transcript</p>
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </CardContent>
