@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Stethoscope, AlertCircle } from 'lucide-react';
+import { Loader2, Stethoscope, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 
 // Clean up auth state utility
 const cleanupAuthState = () => {
@@ -31,6 +31,8 @@ export default function Auth() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [activeTab, setActiveTab] = useState('signin');
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,6 +47,8 @@ export default function Auth() {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
       if (event === 'SIGNED_IN' && session) {
         toast.success('Successfully signed in!');
         // Use setTimeout to ensure state is updated before navigation
@@ -62,6 +66,8 @@ export default function Auth() {
     setPassword('');
     setConfirmPassword('');
     setFullName('');
+    setShowEmailConfirmation(false);
+    setConfirmationEmail('');
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -96,6 +102,8 @@ export default function Auth() {
           toast.error('Invalid email or password. Please check your credentials and try again.');
         } else if (error.message.includes('Email not confirmed')) {
           toast.error('Please check your email and click the confirmation link before signing in.');
+          setShowEmailConfirmation(true);
+          setConfirmationEmail(email);
         } else {
           toast.error(error.message);
         }
@@ -170,6 +178,8 @@ export default function Auth() {
 
       if (data.user) {
         console.log('Sign up successful:', data.user.email);
+        setConfirmationEmail(email);
+        
         if (data.user.email_confirmed_at) {
           // Email already confirmed, user is logged in
           toast.success('Account created and signed in successfully!');
@@ -178,9 +188,9 @@ export default function Auth() {
           }, 100);
         } else {
           // Email confirmation required
-          toast.success('Account created! Please check your email to confirm your account, then return here to sign in.');
+          toast.success('Account created successfully! Please check your email to confirm your account.');
+          setShowEmailConfirmation(true);
           resetForm();
-          setActiveTab('signin');
         }
       }
     } catch (error) {
@@ -190,6 +200,92 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+
+  const handleResendConfirmation = async () => {
+    if (!confirmationEmail) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: confirmationEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        if (error.message.includes('rate_limit')) {
+          toast.error('Please wait before requesting another confirmation email.');
+        } else {
+          toast.error(error.message);
+        }
+      } else {
+        toast.success('Confirmation email sent! Please check your inbox.');
+      }
+    } catch (error) {
+      console.error('Error resending confirmation:', error);
+      toast.error('Failed to resend confirmation email.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (showEmailConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Mail className="h-8 w-8 text-blue-600" />
+                </div>
+              </div>
+              <CardTitle>Check Your Email</CardTitle>
+              <CardDescription>
+                We've sent a confirmation link to <strong>{confirmationEmail}</strong>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center text-sm text-gray-600 space-y-2">
+                <p>Click the link in your email to confirm your account.</p>
+                <p>After confirming, return here to sign in.</p>
+              </div>
+              
+              <div className="space-y-3">
+                <Button
+                  onClick={handleResendConfirmation}
+                  variant="outline"
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Resend confirmation email'
+                  )}
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    setShowEmailConfirmation(false);
+                    setActiveTab('signin');
+                  }}
+                  className="w-full"
+                >
+                  Back to Sign In
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -329,7 +425,7 @@ export default function Auth() {
             <p>For healthcare professionals only</p>
           </div>
           <p className="text-xs">
-            If you experience issues signing up, please wait a few minutes between attempts.
+            After signing up, please check your email for a confirmation link.
           </p>
         </div>
       </div>
