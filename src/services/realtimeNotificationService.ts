@@ -45,20 +45,27 @@ class RealtimeNotificationService {
     }
   ];
 
-  private notificationChannel: any;
-  private appointmentChannel: any;
+  private notificationChannel: any = null;
+  private appointmentChannel: any = null;
   private isInitialized = false;
 
-  constructor() {
-    if (!this.isInitialized) {
-      this.setupRealtimeSubscriptions();
-      this.isInitialized = true;
+  // Initialize subscriptions only once
+  initialize() {
+    if (this.isInitialized) {
+      console.log('RealtimeNotificationService already initialized');
+      return;
     }
+
+    console.log('Initializing RealtimeNotificationService');
+    this.setupRealtimeSubscriptions();
+    this.isInitialized = true;
   }
 
   private setupRealtimeSubscriptions() {
-    // Clean up existing channels first
+    // Clean up any existing channels first
     this.cleanup();
+
+    console.log('Setting up realtime subscriptions');
 
     // Subscribe to appointment changes
     this.appointmentChannel = supabaseDataService.subscribeToAppointments((appointment) => {
@@ -155,9 +162,7 @@ class RealtimeNotificationService {
   private displayNotification(notification: DatabaseNotification) {
     console.log('Displaying notification:', notification);
     
-    // Show toast notification based on priority
-    const variant = notification.priority === 'critical' || notification.priority === 'high' ? 'destructive' : 'default';
-    
+    // Show toast notification
     toast(notification.title, {
       description: notification.message,
     });
@@ -178,15 +183,21 @@ class RealtimeNotificationService {
 
   // Cleanup subscriptions
   cleanup() {
-    if (this.notificationChannel) {
-      supabase.removeChannel(this.notificationChannel);
-      this.notificationChannel = null;
-    }
-    if (this.appointmentChannel) {
-      supabase.removeChannel(this.appointmentChannel);
-      this.appointmentChannel = null;
-    }
+    console.log('Cleaning up RealtimeNotificationService subscriptions');
+    
+    // Clean up via the data service which manages the channels
+    supabaseDataService.cleanup();
+    
+    this.notificationChannel = null;
+    this.appointmentChannel = null;
+  }
+
+  // Reset the service (useful for testing or reinitialization)
+  reset() {
+    this.cleanup();
+    this.isInitialized = false;
   }
 }
 
+// Create a singleton instance but don't initialize it immediately
 export const realtimeNotificationService = new RealtimeNotificationService();

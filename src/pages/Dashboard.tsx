@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -28,13 +27,21 @@ export default function Dashboard() {
   useEffect(() => {
     checkAuthAndLoadData();
     
-    // Setup real-time subscriptions
-    const unsubscribe = supabaseDataStore.subscribeToChanges(() => {
-      loadDashboardData();
-    });
+    // Setup real-time subscriptions only after authentication
+    const setupRealtimeSubscriptions = () => {
+      // Initialize the notification service
+      realtimeNotificationService.initialize();
+
+      // Setup data store subscriptions
+      supabaseDataStore.subscribeToChanges(() => {
+        loadDashboardData();
+      });
+    };
+
+    setupRealtimeSubscriptions();
 
     return () => {
-      // Cleanup subscriptions
+      // Cleanup subscriptions on component unmount
       realtimeNotificationService.cleanup();
     };
   }, []);

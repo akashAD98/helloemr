@@ -56,6 +56,9 @@ export interface DatabaseNotification {
 }
 
 class SupabaseDataService {
+  private appointmentChannel: any = null;
+  private notificationChannel: any = null;
+
   // Patient operations
   async getPatients(): Promise<Patient[]> {
     try {
@@ -208,7 +211,7 @@ class SupabaseDataService {
         duration: typeof appointment.duration === 'number' ? appointment.duration : 30,
         type: appointment.type || 'consultation',
         status: appointment.status || 'pending',
-        reason_for_visit: appointment.reason,
+        reason_for_visit: appointment.reason_for_visit,
         notes: appointment.notes
       };
 
@@ -244,7 +247,7 @@ class SupabaseDataService {
         duration: typeof updates.duration === 'number' ? updates.duration : undefined,
         type: updates.type,
         status: updates.status,
-        reason_for_visit: updates.reason,
+        reason_for_visit: updates.reason_for_visit,
         notes: updates.notes
       };
 
@@ -288,15 +291,26 @@ class SupabaseDataService {
         return null;
       }
 
+      const validNotification = {
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        user_id: notification.user_id,
+        appointment_id: notification.appointment_id,
+        scheduled_for: notification.scheduled_for,
+        priority: notification.priority || 'medium',
+        delivery_method: notification.delivery_method || 'system'
+      };
+
       const { data, error } = await supabase
         .from('notifications')
-        .insert(notification)
+        .insert(validNotification)
         .select()
         .single();
 
       if (error) throw error;
 
-      return data;
+      return data as DatabaseNotification;
     } catch (error) {
       console.error('Error creating notification:', error);
       return null;
@@ -318,7 +332,7 @@ class SupabaseDataService {
 
       if (error) throw error;
 
-      return data || [];
+      return (data || []) as DatabaseNotification[];
     } catch (error) {
       console.error('Error fetching notifications:', error);
       return [];
@@ -380,7 +394,7 @@ class SupabaseDataService {
       duration: dbAppointment.duration || 30,
       type: dbAppointment.type || 'consultation',
       status: dbAppointment.status || 'pending',
-      reason: dbAppointment.reason_for_visit,
+      reason_for_visit: dbAppointment.reason_for_visit,
       notes: dbAppointment.notes
     };
   }
@@ -398,9 +412,15 @@ class SupabaseDataService {
     return age;
   }
 
-  // Real-time subscriptions
+  // Real-time subscriptions with proper cleanup
   subscribeToAppointments(callback: (appointment: Appointment) => void) {
-    return supabase
+    // Clean up existing appointment channel if it exists
+    if (this.appointmentChannel) {
+      supabase.removeChannel(this.appointmentChannel);
+      this.appointmentChannel = null;
+    }
+
+    this.appointmentChannel = supabase
       .channel('appointments-changes')
       .on('postgres_changes', {
         event: '*',
@@ -429,10 +449,18 @@ class SupabaseDataService {
         }
       })
       .subscribe();
+
+    return this.appointmentChannel;
   }
 
   subscribeToNotifications(callback: (notification: DatabaseNotification) => void) {
-    return supabase
+    // Clean up existing notification channel if it exists
+    if (this.notificationChannel) {
+      supabase.removeChannel(this.notificationChannel);
+      this.notificationChannel = null;
+    }
+
+    this.notificationChannel = supabase
       .channel('notifications-changes')
       .on('postgres_changes', {
         event: 'INSERT',
@@ -443,6 +471,20 @@ class SupabaseDataService {
         callback(payload.new as DatabaseNotification);
       })
       .subscribe();
+
+    return this.notificationChannel;
+  }
+
+  // Cleanup method to properly remove channels
+  cleanup() {
+    if (this.appointmentChannel) {
+      supabase.removeChannel(this.appointmentChannel);
+      this.appointmentChannel = null;
+    }
+    if (this.notificationChannel) {
+      supabase.removeChannel(this.notificationChannel);
+      this.notificationChannel = null;
+    }
   }
 }
 
