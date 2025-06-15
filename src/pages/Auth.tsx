@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,8 +69,53 @@ export default function Auth() {
     setConfirmationEmail('');
   };
 
+  const handleTestLogin = async () => {
+    setIsLoading(true);
+    try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
+      // Attempt to sign out any existing session
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        console.log('Sign out attempt during test login:', err);
+      }
+
+      // Create a mock session for testing
+      const mockUser = {
+        id: 'test-user-id',
+        email: 'user@deepai.com',
+        user_metadata: {
+          full_name: 'Test User'
+        },
+        email_confirmed_at: new Date().toISOString()
+      };
+
+      // Store mock session in localStorage for testing
+      localStorage.setItem('mock_auth_session', JSON.stringify(mockUser));
+      
+      toast.success('Test login successful!');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
+    } catch (error) {
+      console.error('Test login error:', error);
+      toast.error('Test login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for hardcoded test credentials
+    if (email === 'user@deepai.com' && password === 'deep@1234') {
+      await handleTestLogin();
+      return;
+    }
+
     if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
@@ -86,7 +130,6 @@ export default function Auth() {
       try {
         await supabase.auth.signOut({ scope: 'global' });
       } catch (err) {
-        // Continue even if this fails
         console.log('Sign out attempt during sign in:', err);
       }
 
@@ -113,7 +156,6 @@ export default function Auth() {
       if (data.user) {
         console.log('Sign in successful:', data.user.email);
         toast.success('Signed in successfully!');
-        // Force page refresh for clean state
         setTimeout(() => {
           window.location.href = '/';
         }, 100);
@@ -300,6 +342,32 @@ export default function Auth() {
           <p className="text-gray-600 mt-2">Electronic Medical Records System</p>
         </div>
 
+        {/* Test Login Card */}
+        <Card className="mb-4 border-green-200 bg-green-50">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-green-800 text-lg">Test Login</CardTitle>
+            <CardDescription className="text-green-700">
+              For testing purposes only
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button 
+              onClick={handleTestLogin} 
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                'Login as Test User (user@deepai.com)'
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Welcome</CardTitle>
@@ -425,7 +493,7 @@ export default function Auth() {
             <p>For healthcare professionals only</p>
           </div>
           <p className="text-xs">
-            After signing up, please check your email for a confirmation link.
+            Test login: user@deepai.com / deep@1234
           </p>
         </div>
       </div>

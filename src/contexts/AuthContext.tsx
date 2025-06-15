@@ -42,7 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener first
+    // Check for mock session first
+    const mockSession = localStorage.getItem('mock_auth_session');
+    if (mockSession) {
+      try {
+        const mockUser = JSON.parse(mockSession);
+        setUser(mockUser as User);
+        setSession({ user: mockUser } as Session);
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error('Error parsing mock session:', error);
+        localStorage.removeItem('mock_auth_session');
+      }
+    }
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
@@ -53,9 +68,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Handle different auth events
         if (event === 'SIGNED_IN' && session) {
           console.log('User signed in successfully');
+          // Remove mock session if real session is established
+          localStorage.removeItem('mock_auth_session');
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           cleanupAuthState();
+          localStorage.removeItem('mock_auth_session');
         }
       }
     );
@@ -63,8 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
+      if (!mockSession) {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
       setLoading(false);
     });
 
@@ -73,11 +93,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Remove mock session
+      localStorage.removeItem('mock_auth_session');
       cleanupAuthState();
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) {
         console.error('Error signing out:', error);
       }
+      // Force page refresh to clear all state
+      window.location.href = '/auth';
     } catch (error) {
       console.error('Unexpected error during sign out:', error);
     }
