@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +32,7 @@ export function PrescriptionBuilder() {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedPrescription, setGeneratedPrescription] = useState<Prescription | null>(null);
   
-  // Simplified, common options that doctors use most
+  // Simplified, common options that doctors use most - ensuring no empty values
   const quickFrequencies = [
     "Once daily",
     "Twice daily", 
@@ -41,7 +40,7 @@ export function PrescriptionBuilder() {
     "As needed",
     "At bedtime",
     "With meals"
-  ];
+  ].filter(freq => freq && freq.trim() !== ""); // Filter out any empty values
   
   const quickQuantities = [
     "30 tablets",
@@ -50,7 +49,15 @@ export function PrescriptionBuilder() {
     "30 days supply",
     "60 days supply",
     "90 days supply"
-  ];
+  ].filter(qty => qty && qty.trim() !== ""); // Filter out any empty values
+
+  const refillOptions = [
+    { value: "0", label: "No refills" },
+    { value: "1", label: "1 refill" },
+    { value: "2", label: "2 refills" },
+    { value: "3", label: "3 refills" },
+    { value: "5", label: "5 refills" }
+  ].filter(option => option.value && option.value.trim() !== ""); // Filter out any empty values
 
   const selectedPatient = dataStore.getPatientById(formData.patientId);
   const selectedMedication = medicationDatabase.find(med => med.id === formData.medicationId);
@@ -231,11 +238,9 @@ export function PrescriptionBuilder() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">No refills</SelectItem>
-                      <SelectItem value="1">1 refill</SelectItem>
-                      <SelectItem value="2">2 refills</SelectItem>
-                      <SelectItem value="3">3 refills</SelectItem>
-                      <SelectItem value="5">5 refills</SelectItem>
+                      {refillOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
