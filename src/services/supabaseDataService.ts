@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Patient } from "@/types/patient";
 import { Appointment } from "@/data/mockData";
@@ -211,7 +210,7 @@ class SupabaseDataService {
         duration: typeof appointment.duration === 'number' ? appointment.duration : 30,
         type: appointment.type || 'consultation',
         status: appointment.status || 'pending',
-        reason_for_visit: appointment.reason_for_visit,
+        reason_for_visit: appointment.reasonForVisit,
         notes: appointment.notes
       };
 
@@ -247,7 +246,7 @@ class SupabaseDataService {
         duration: typeof updates.duration === 'number' ? updates.duration : undefined,
         type: updates.type,
         status: updates.status,
-        reason_for_visit: updates.reason_for_visit,
+        reason_for_visit: updates.reasonForVisit,
         notes: updates.notes
       };
 
@@ -394,7 +393,7 @@ class SupabaseDataService {
       duration: dbAppointment.duration || 30,
       type: dbAppointment.type || 'consultation',
       status: dbAppointment.status || 'pending',
-      reason_for_visit: dbAppointment.reason_for_visit,
+      reasonForVisit: dbAppointment.reason_for_visit,
       notes: dbAppointment.notes
     };
   }
