@@ -8,7 +8,21 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Stethoscope } from 'lucide-react';
+import { Loader2, Stethoscope, AlertCircle } from 'lucide-react';
+
+// Clean up auth state utility
+const cleanupAuthState = () => {
+  Object.keys(localStorage).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      localStorage.removeItem(key);
+    }
+  });
+  Object.keys(sessionStorage || {}).forEach((key) => {
+    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+};
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +30,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [activeTab, setActiveTab] = useState('signin');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,12 +46,23 @@ export default function Auth() {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        navigate('/');
+        toast.success('Successfully signed in!');
+        // Use setTimeout to ensure state is updated before navigation
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setFullName('');
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +73,29 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
+      // Attempt to sign out any existing session
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Sign out attempt during sign in:', err);
+      }
+
+      console.log('Attempting to sign in with:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         if (error.message.includes('Invalid login credentials')) {
-          toast.error('Invalid email or password');
+          toast.error('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('Please check your email and click the confirmation link before signing in.');
         } else {
           toast.error(error.message);
         }
@@ -62,12 +103,16 @@ export default function Auth() {
       }
 
       if (data.user) {
+        console.log('Sign in successful:', data.user.email);
         toast.success('Signed in successfully!');
-        navigate('/');
+        // Force page refresh for clean state
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
       }
     } catch (error) {
-      console.error('Sign in error:', error);
-      toast.error('An unexpected error occurred');
+      console.error('Unexpected sign in error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -92,22 +137,31 @@ export default function Auth() {
 
     setIsLoading(true);
     try {
+      // Clean up any existing auth state first
+      cleanupAuthState();
+      
+      console.log('Attempting to sign up with:', email);
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: fullName,
+            full_name: fullName.trim(),
           }
         }
       });
 
       if (error) {
+        console.error('Sign up error:', error);
         if (error.message.includes('already registered')) {
           toast.error('This email is already registered. Please sign in instead.');
+          setActiveTab('signin');
+          resetForm();
+        } else if (error.message.includes('rate_limit') || error.message.includes('email_send_rate_limit')) {
+          toast.error('Too many signup attempts. Please wait a few minutes and try again.');
         } else {
           toast.error(error.message);
         }
@@ -115,16 +169,23 @@ export default function Auth() {
       }
 
       if (data.user) {
+        console.log('Sign up successful:', data.user.email);
         if (data.user.email_confirmed_at) {
-          toast.success('Account created successfully!');
-          navigate('/');
+          // Email already confirmed, user is logged in
+          toast.success('Account created and signed in successfully!');
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 100);
         } else {
-          toast.success('Please check your email to confirm your account');
+          // Email confirmation required
+          toast.success('Account created! Please check your email to confirm your account, then return here to sign in.');
+          resetForm();
+          setActiveTab('signin');
         }
       }
     } catch (error) {
-      console.error('Sign up error:', error);
-      toast.error('An unexpected error occurred');
+      console.error('Unexpected sign up error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +212,7 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -263,7 +324,13 @@ export default function Auth() {
         </Card>
 
         <div className="text-center mt-6 text-sm text-gray-600">
-          <p>For healthcare professionals only</p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <p>For healthcare professionals only</p>
+          </div>
+          <p className="text-xs">
+            If you experience issues signing up, please wait a few minutes between attempts.
+          </p>
         </div>
       </div>
     </div>
