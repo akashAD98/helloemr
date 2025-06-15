@@ -14,33 +14,56 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { PatientCard } from "@/components/common/PatientCard";
-import { PlusCircle, Search } from "lucide-react";
-import { dataStore } from "@/lib/dataStore";
+import { PlusCircle, Search, RefreshCw } from "lucide-react";
+import { supabaseDataStore } from "@/lib/supabaseDataStore";
 import { Patient } from "@/types/patient";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Load patients from data store
+  // Check authentication and load patients
   useEffect(() => {
-    const loadPatients = () => {
-      const allPatients = dataStore.getPatients();
-      setPatients(allPatients);
-    };
-    
-    loadPatients();
-    
-    // Listen for storage changes to update when new patients are added
-    const handleStorageChange = () => {
-      loadPatients();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    checkAuth();
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      setIsAuthenticated(false);
+      toast.error("Please sign in to view patients");
+      return;
+    }
+    
+    setIsAuthenticated(true);
+    loadPatients();
+  };
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      await supabaseDataStore.initialize();
+      const allPatients = await supabaseDataStore.getPatients();
+      setPatients(allPatients);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      toast.error('Failed to load patients');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    await supabaseDataStore.refresh();
+    await loadPatients();
+    toast.success("Patients refreshed");
+  };
   
   const filteredPatients = patients.filter(patient => 
     patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -52,6 +75,21 @@ export default function Patients() {
     toast.info("New patient registration will be available soon");
   };
 
+  if (!isAuthenticated) {
+    return (
+      <PageContainer>
+        <div className="p-6 space-y-6">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
+              <p className="text-muted-foreground">Please sign in to view and manage patients.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer>
       <div className="p-6 space-y-6">
@@ -59,10 +97,16 @@ export default function Patients() {
           title="Patients" 
           description={`Manage your patient records (${patients.length} total patients)`}
           actions={
-            <Button onClick={handleNewPatient}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Patient
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button onClick={handleNewPatient}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                New Patient
+              </Button>
+            </div>
           }
         />
         
@@ -97,7 +141,12 @@ export default function Patients() {
               </div>
             </div>
             
-            {viewMode === "grid" ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p className="text-muted-foreground">Loading patients...</p>
+              </div>
+            ) : viewMode === "grid" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredPatients.map(patient => (
                   <PatientCard
