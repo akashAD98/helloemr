@@ -7,27 +7,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientCard } from "@/components/common/PatientCard";
 import { TaskCard } from "@/components/common/TaskCard";
-import { PlusCircle, Users, CheckCircle, Clock, Calendar, Activity, Bell, RefreshCw } from "lucide-react";
+import { PlusCircle, Users, CheckCircle, Clock, Calendar, Activity, Bell, RefreshCw, LogOut } from "lucide-react";
 import { supabaseDataStore } from "@/lib/supabaseDataStore";
 import { realtimeNotificationService } from "@/services/realtimeNotificationService";
 import { tasks } from "@/data/mockData";
 import { Patient } from "@/types/patient";
 import { Appointment } from "@/data/mockData";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
-    checkAuthAndLoadData();
+    loadDashboardData();
     
-    // Setup real-time subscriptions only after authentication
+    // Setup real-time subscriptions
     const setupRealtimeSubscriptions = () => {
       // Initialize the notification service
       realtimeNotificationService.initialize();
@@ -45,19 +45,6 @@ export default function Dashboard() {
       realtimeNotificationService.cleanup();
     };
   }, []);
-
-  const checkAuthAndLoadData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      setIsAuthenticated(false);
-      toast.error("Please sign in to view the dashboard");
-      return;
-    }
-    
-    setIsAuthenticated(true);
-    await loadDashboardData();
-  };
 
   const loadDashboardData = async () => {
     try {
@@ -85,6 +72,16 @@ export default function Dashboard() {
     await supabaseDataStore.refresh();
     await loadDashboardData();
     toast.success("Dashboard refreshed");
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error("Failed to sign out");
+    }
   };
 
   // Get today's appointments
@@ -123,32 +120,23 @@ export default function Dashboard() {
   const overdueTasks = tasks.filter(task => task.status === "overdue");
   const unreadNotifications = notifications.filter(n => !n.read_at);
 
-  if (!isAuthenticated) {
-    return (
-      <PageContainer>
-        <div className="p-6 space-y-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
-              <p className="text-muted-foreground">Please sign in to view the dashboard.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </PageContainer>
-    );
-  }
+  const userName = user?.user_metadata?.full_name || user?.email || "Doctor";
 
   return (
     <PageContainer>
       <div className="p-6 space-y-6">
         <PageHeader 
           title="Dashboard" 
-          description="Welcome back, Dr. Jennifer Davis"
+          description={`Welcome back, ${userName}`}
           actions={
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleRefresh} disabled={loading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
+              </Button>
+              <Button variant="outline" onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </Button>
               <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
