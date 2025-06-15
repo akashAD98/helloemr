@@ -31,12 +31,30 @@ export function MedicationSelector({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
-  // Ensure medication categories are valid and not empty
-  const validCategories = medicationCategories.filter(category => {
-    const isValid = category && typeof category === 'string' && category.trim() !== "";
-    console.log('Category validation:', category, 'isValid:', isValid);
-    return isValid;
-  });
+  // More robust category validation with explicit checks and fallbacks
+  const validCategories = (() => {
+    try {
+      if (!Array.isArray(medicationCategories)) {
+        console.warn('medicationCategories is not an array, using empty array');
+        return [];
+      }
+      
+      const filtered = medicationCategories.filter(category => {
+        const isValid = category && 
+                       typeof category === 'string' && 
+                       category.trim() !== "" && 
+                       category.length > 0;
+        console.log('Category validation:', category, 'isValid:', isValid);
+        return isValid;
+      }).map(category => category.trim()); // Ensure no whitespace issues
+      
+      console.log('Valid categories after filtering:', filtered);
+      return filtered;
+    } catch (error) {
+      console.error('Error processing medication categories:', error);
+      return [];
+    }
+  })();
 
   const filteredMedications = medicationDatabase.filter(med => {
     const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -115,14 +133,20 @@ export function MedicationSelector({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                {validCategories.map(category => {
-                  console.log('Rendering category SelectItem:', category);
-                  return (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  );
-                })}
+                {validCategories.length > 0 ? (
+                  validCategories.map(category => {
+                    console.log('Rendering category SelectItem:', category);
+                    return (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    );
+                  })
+                ) : (
+                  <SelectItem value="no-categories" disabled>
+                    No categories available
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
