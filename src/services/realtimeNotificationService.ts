@@ -46,14 +46,22 @@ class RealtimeNotificationService {
   ];
 
   private notificationChannel: any;
+  private appointmentChannel: any;
+  private isInitialized = false;
 
   constructor() {
-    this.setupRealtimeSubscriptions();
+    if (!this.isInitialized) {
+      this.setupRealtimeSubscriptions();
+      this.isInitialized = true;
+    }
   }
 
   private setupRealtimeSubscriptions() {
+    // Clean up existing channels first
+    this.cleanup();
+
     // Subscribe to appointment changes
-    supabaseDataService.subscribeToAppointments((appointment) => {
+    this.appointmentChannel = supabaseDataService.subscribeToAppointments((appointment) => {
       this.handleAppointmentChange(appointment);
     });
 
@@ -172,6 +180,11 @@ class RealtimeNotificationService {
   cleanup() {
     if (this.notificationChannel) {
       supabase.removeChannel(this.notificationChannel);
+      this.notificationChannel = null;
+    }
+    if (this.appointmentChannel) {
+      supabase.removeChannel(this.appointmentChannel);
+      this.appointmentChannel = null;
     }
   }
 }

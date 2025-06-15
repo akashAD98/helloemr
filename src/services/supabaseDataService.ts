@@ -20,7 +20,7 @@ export interface DatabasePatient {
   emergency_phone?: string;
   medical_history?: string[];
   primary_provider?: string;
-  status?: 'active' | 'inactive' | 'pending';
+  status?: string; // Changed from union type to string to match Supabase
   created_at?: string;
   updated_at?: string;
 }
@@ -33,7 +33,7 @@ export interface DatabaseAppointment {
   appointment_time: string;
   duration?: number;
   type?: string;
-  status?: 'pending' | 'booked' | 'completed' | 'cancelled';
+  status?: string; // Changed from union type to string to match Supabase
   reason_for_visit?: string;
   notes?: string;
   created_at?: string;
@@ -66,7 +66,7 @@ class SupabaseDataService {
 
       if (error) throw error;
 
-      return data.map(this.transformPatientFromDB);
+      return (data || []).map((item: any) => this.transformPatientFromDB(item));
     } catch (error) {
       console.error('Error fetching patients:', error);
       toast.error('Failed to load patients');
@@ -94,7 +94,7 @@ class SupabaseDataService {
 
   async createPatient(patient: Partial<Patient>): Promise<Patient | null> {
     try {
-      const dbPatient: Partial<DatabasePatient> = {
+      const dbPatient = {
         first_name: patient.firstName || '',
         last_name: patient.lastName || '',
         date_of_birth: patient.dateOfBirth || '',
@@ -131,7 +131,7 @@ class SupabaseDataService {
 
   async updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | null> {
     try {
-      const dbUpdates: Partial<DatabasePatient> = {
+      const dbUpdates = {
         first_name: updates.firstName,
         last_name: updates.lastName,
         date_of_birth: updates.dateOfBirth,
@@ -148,6 +148,13 @@ class SupabaseDataService {
         primary_provider: updates.primaryProvider,
         status: updates.status
       };
+
+      // Remove undefined values
+      Object.keys(dbUpdates).forEach(key => {
+        if (dbUpdates[key as keyof typeof dbUpdates] === undefined) {
+          delete dbUpdates[key as keyof typeof dbUpdates];
+        }
+      });
 
       const { data, error } = await supabase
         .from('patients')
@@ -183,7 +190,7 @@ class SupabaseDataService {
 
       if (error) throw error;
 
-      return data.map(this.transformAppointmentFromDB);
+      return (data || []).map((item: any) => this.transformAppointmentFromDB(item));
     } catch (error) {
       console.error('Error fetching appointments:', error);
       toast.error('Failed to load appointments');
@@ -193,12 +200,12 @@ class SupabaseDataService {
 
   async createAppointment(appointment: Partial<Appointment>): Promise<Appointment | null> {
     try {
-      const dbAppointment: Partial<DatabaseAppointment> = {
-        patient_id: appointment.patientId,
+      const dbAppointment = {
+        patient_id: appointment.patientId || '',
         provider: appointment.provider || '',
         appointment_date: appointment.date || '',
         appointment_time: appointment.time || '',
-        duration: appointment.duration || 30,
+        duration: typeof appointment.duration === 'number' ? appointment.duration : 30,
         type: appointment.type || 'consultation',
         status: appointment.status || 'pending',
         reason_for_visit: appointment.reason,
@@ -230,16 +237,23 @@ class SupabaseDataService {
 
   async updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | null> {
     try {
-      const dbUpdates: Partial<DatabaseAppointment> = {
+      const dbUpdates = {
         provider: updates.provider,
         appointment_date: updates.date,
         appointment_time: updates.time,
-        duration: updates.duration,
+        duration: typeof updates.duration === 'number' ? updates.duration : undefined,
         type: updates.type,
         status: updates.status,
         reason_for_visit: updates.reason,
         notes: updates.notes
       };
+
+      // Remove undefined values
+      Object.keys(dbUpdates).forEach(key => {
+        if (dbUpdates[key as keyof typeof dbUpdates] === undefined) {
+          delete dbUpdates[key as keyof typeof dbUpdates];
+        }
+      });
 
       const { data, error } = await supabase
         .from('appointments')
@@ -268,6 +282,12 @@ class SupabaseDataService {
   // Notification operations
   async createNotification(notification: Partial<DatabaseNotification>): Promise<DatabaseNotification | null> {
     try {
+      // Ensure required fields are present
+      if (!notification.title || !notification.message || !notification.type) {
+        console.error('Missing required notification fields');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .insert(notification)
@@ -322,7 +342,7 @@ class SupabaseDataService {
   }
 
   // Transform functions
-  private transformPatientFromDB(dbPatient: DatabasePatient): Patient {
+  private transformPatientFromDB(dbPatient: any): Patient {
     return {
       id: dbPatient.id,
       firstName: dbPatient.first_name,
@@ -341,7 +361,7 @@ class SupabaseDataService {
       medicalHistory: dbPatient.medical_history,
       primaryProvider: dbPatient.primary_provider,
       provider: dbPatient.primary_provider,
-      status: dbPatient.status,
+      status: dbPatient.status as "active" | "inactive" | "pending",
       active: dbPatient.status === 'active',
       lastVisit: dbPatient.updated_at,
       age: this.calculateAge(dbPatient.date_of_birth)
