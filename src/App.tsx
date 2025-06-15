@@ -11,6 +11,9 @@ import Settings from '@/pages/Settings';
 import DeepAIAudioNotes from '@/pages/DeepAIAudioNotes';
 import RecordingSession from '@/pages/RecordingSession';
 import NotFound from '@/pages/NotFound';
+import { HealthcareChatbot } from '@/components/ai-analytics/HealthcareChatbot';
+import { DocumentSummarizer } from '@/components/ai-analytics/DocumentSummarizer';
+import { DocumentQA } from '@/components/ai-analytics/DocumentQA';
 import { Toaster } from '@/components/ui/sonner';
 import './App.css';
 
@@ -27,6 +30,9 @@ function App() {
             <Route path="/deepai-audio-notes" element={<DeepAIAudioNotes />} />
             <Route path="/recording-session" element={<RecordingSession />} />
             <Route path="/ai-analytics" element={<AIAnalytics />} />
+            <Route path="/ai-analytics/healthcare-chat" element={<HealthcareChatbot />} />
+            <Route path="/ai-analytics/document-summary" element={<DocumentSummarizer />} />
+            <Route path="/ai-analytics/document-qa" element={<DocumentQA />} />
             <Route path="/e-prescribing" element={<EPrescribing />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
