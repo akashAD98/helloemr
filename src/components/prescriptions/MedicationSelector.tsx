@@ -31,6 +31,13 @@ export function MedicationSelector({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
+  // Ensure medication categories are valid and not empty
+  const validCategories = medicationCategories.filter(category => {
+    const isValid = category && typeof category === 'string' && category.trim() !== "";
+    console.log('Category validation:', category, 'isValid:', isValid);
+    return isValid;
+  });
+
   const filteredMedications = medicationDatabase.filter(med => {
     const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          med.genericName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,11 +115,14 @@ export function MedicationSelector({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                {medicationCategories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
+                {validCategories.map(category => {
+                  console.log('Rendering category SelectItem:', category);
+                  return (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

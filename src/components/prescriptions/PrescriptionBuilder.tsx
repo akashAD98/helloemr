@@ -40,7 +40,11 @@ export function PrescriptionBuilder() {
     "As needed",
     "At bedtime",
     "With meals"
-  ].filter(freq => freq && freq.trim() !== ""); // Filter out any empty values
+  ].filter(freq => {
+    const isValid = freq && typeof freq === 'string' && freq.trim() !== "";
+    console.log('Frequency validation:', freq, 'isValid:', isValid);
+    return isValid;
+  });
   
   const quickQuantities = [
     "30 tablets",
@@ -49,7 +53,11 @@ export function PrescriptionBuilder() {
     "30 days supply",
     "60 days supply",
     "90 days supply"
-  ].filter(qty => qty && qty.trim() !== ""); // Filter out any empty values
+  ].filter(qty => {
+    const isValid = qty && typeof qty === 'string' && qty.trim() !== "";
+    console.log('Quantity validation:', qty, 'isValid:', isValid);
+    return isValid;
+  });
 
   const refillOptions = [
     { value: "0", label: "No refills" },
@@ -57,7 +65,11 @@ export function PrescriptionBuilder() {
     { value: "2", label: "2 refills" },
     { value: "3", label: "3 refills" },
     { value: "5", label: "5 refills" }
-  ].filter(option => option.value && option.value.trim() !== ""); // Filter out any empty values
+  ].filter(option => {
+    const isValid = option && option.value && typeof option.value === 'string' && option.value.trim() !== "";
+    console.log('Refill option validation:', option, 'isValid:', isValid);
+    return isValid;
+  });
 
   const selectedPatient = dataStore.getPatientById(formData.patientId);
   const selectedMedication = medicationDatabase.find(med => med.id === formData.medicationId);
@@ -208,9 +220,12 @@ export function PrescriptionBuilder() {
                       <SelectValue placeholder="How often?" />
                     </SelectTrigger>
                     <SelectContent>
-                      {quickFrequencies.map((freq) => (
-                        <SelectItem key={freq} value={freq}>{freq}</SelectItem>
-                      ))}
+                      {quickFrequencies.map((freq) => {
+                        console.log('Rendering frequency SelectItem:', freq);
+                        return (
+                          <SelectItem key={freq} value={freq}>{freq}</SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -222,9 +237,12 @@ export function PrescriptionBuilder() {
                       <SelectValue placeholder="How much?" />
                     </SelectTrigger>
                     <SelectContent>
-                      {quickQuantities.map((qty) => (
-                        <SelectItem key={qty} value={qty}>{qty}</SelectItem>
-                      ))}
+                      {quickQuantities.map((qty) => {
+                        console.log('Rendering quantity SelectItem:', qty);
+                        return (
+                          <SelectItem key={qty} value={qty}>{qty}</SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -238,9 +256,12 @@ export function PrescriptionBuilder() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {refillOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                      ))}
+                      {refillOptions.map((option) => {
+                        console.log('Rendering refill SelectItem:', option.value, option.label);
+                        return (
+                          <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
