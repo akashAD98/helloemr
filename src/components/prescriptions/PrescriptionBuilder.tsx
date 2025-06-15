@@ -5,13 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { PatientSelector } from "./PatientSelector";
 import { MedicationSelector } from "./MedicationSelector";
 import { PrescriptionPDF } from "./PrescriptionPDF";
-import { FileText, Download } from "lucide-react";
+import { FileText, RotateCcw, Send } from "lucide-react";
 import { dataStore } from "@/lib/dataStore";
 import { medicationDatabase } from "@/data/medicationDatabase";
 import { Prescription, PrescriptionFormData } from "@/types/prescription";
@@ -24,7 +23,7 @@ export function PrescriptionBuilder() {
     customMedication: "",
     dosage: "",
     frequency: "",
-    route: "",
+    route: "Oral",
     quantity: "",
     refills: 0,
     instructions: "",
@@ -34,46 +33,34 @@ export function PrescriptionBuilder() {
   const [showPreview, setShowPreview] = useState(false);
   const [generatedPrescription, setGeneratedPrescription] = useState<Prescription | null>(null);
   
-  const frequencyOptions = [
+  // Simplified, common options that doctors use most
+  const quickFrequencies = [
     "Once daily",
     "Twice daily", 
     "Three times daily",
-    "Four times daily",
-    "Every morning",
-    "Every evening",
-    "Every 4 hours",
-    "Every 6 hours",
-    "Every 8 hours",
-    "Every 12 hours",
     "As needed",
-    "Before meals",
-    "After meals",
-    "At bedtime"
+    "At bedtime",
+    "With meals"
   ];
   
-  const routeOptions = [
-    "Oral",
-    "Topical",
-    "Subcutaneous", 
-    "Intramuscular",
-    "Intravenous",
-    "Inhaled",
-    "Rectal",
-    "Sublingual",
-    "Ophthalmic",
-    "Otic",
-    "Nasal",
-    "Transdermal"
+  const quickQuantities = [
+    "30 tablets",
+    "60 tablets", 
+    "90 tablets",
+    "30 days supply",
+    "60 days supply",
+    "90 days supply"
   ];
 
   const selectedPatient = dataStore.getPatientById(formData.patientId);
   const selectedMedication = medicationDatabase.find(med => med.id === formData.medicationId);
 
   const handleGeneratePrescription = () => {
+    // Simple validation
     if (!formData.patientId) {
       toast({
-        title: "Patient Required",
-        description: "Please select a patient first.",
+        title: "Select Patient",
+        description: "Please choose a patient first.",
         variant: "destructive"
       });
       return;
@@ -81,8 +68,8 @@ export function PrescriptionBuilder() {
 
     if (!formData.medicationId && !formData.customMedication) {
       toast({
-        title: "Medication Required", 
-        description: "Please select or add a medication.",
+        title: "Select Medication", 
+        description: "Please choose a medication.",
         variant: "destructive"
       });
       return;
@@ -90,8 +77,8 @@ export function PrescriptionBuilder() {
 
     if (!formData.dosage || !formData.frequency || !formData.quantity) {
       toast({
-        title: "Incomplete Form",
-        description: "Please fill in all required fields.",
+        title: "Complete Prescription",
+        description: "Please fill in dosage, frequency, and quantity.",
         variant: "destructive"
       });
       return;
@@ -112,7 +99,7 @@ export function PrescriptionBuilder() {
       quantity: formData.quantity,
       refills: formData.refills,
       instructions: formData.instructions,
-      prescribedBy: "Dr. Sarah Johnson", // In real app, this would be the logged-in provider
+      prescribedBy: "Dr. Sarah Johnson",
       prescribedDate: new Date().toLocaleDateString(),
       status: "pending",
       notes: formData.notes
@@ -122,8 +109,8 @@ export function PrescriptionBuilder() {
     setShowPreview(true);
 
     toast({
-      title: "Prescription Generated",
-      description: `Prescription for ${medicationName} has been created for ${patientName}.`,
+      title: "Prescription Ready",
+      description: `${medicationName} prescription created for ${patientName}`,
     });
   };
 
@@ -138,7 +125,7 @@ export function PrescriptionBuilder() {
       customMedication: "",
       dosage: "",
       frequency: "",
-      route: "",
+      route: "Oral",
       quantity: "",
       refills: 0,
       instructions: "",
@@ -146,6 +133,12 @@ export function PrescriptionBuilder() {
     });
     setShowPreview(false);
     setGeneratedPrescription(null);
+  };
+
+  const quickFillCommon = () => {
+    if (selectedMedication) {
+      handleUpdateField("instructions", "Take as directed by your physician. If you experience any side effects, contact your doctor immediately.");
+    }
   };
 
   return (
@@ -157,8 +150,6 @@ export function PrescriptionBuilder() {
             onPatientSelect={(patientId) => handleUpdateField("patientId", patientId)}
           />
 
-          <Separator />
-
           <MedicationSelector
             selectedMedicationId={formData.medicationId}
             customMedication={formData.customMedication}
@@ -169,99 +160,120 @@ export function PrescriptionBuilder() {
             onRouteChange={(route) => handleUpdateField("route", route)}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dosage">Dosage *</Label>
-              <Input 
-                id="dosage" 
-                value={formData.dosage} 
-                onChange={(e) => handleUpdateField("dosage", e.target.value)}
-                placeholder="e.g., 500mg, 1 tablet"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="frequency">Frequency *</Label>
-              <Select value={formData.frequency} onValueChange={(frequency) => handleUpdateField("frequency", frequency)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select frequency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frequencyOptions.map((freq) => (
-                    <SelectItem key={freq} value={freq}>{freq}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="route">Route</Label>
-              <Select value={formData.route} onValueChange={(route) => handleUpdateField("route", route)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select route" />
-                </SelectTrigger>
-                <SelectContent>
-                  {routeOptions.map((rt) => (
-                    <SelectItem key={rt} value={rt}>{rt}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Prescription Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dosage">Dosage *</Label>
+                  <Input 
+                    id="dosage" 
+                    value={formData.dosage} 
+                    onChange={(e) => handleUpdateField("dosage", e.target.value)}
+                    placeholder="e.g., 500mg, 1 tablet"
+                    className="h-11"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="route">Route</Label>
+                  <Select value={formData.route} onValueChange={(route) => handleUpdateField("route", route)}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Oral">Oral</SelectItem>
+                      <SelectItem value="Topical">Topical</SelectItem>
+                      <SelectItem value="Injection">Injection</SelectItem>
+                      <SelectItem value="Inhaled">Inhaled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="frequency">Frequency *</Label>
+                  <Select value={formData.frequency} onValueChange={(frequency) => handleUpdateField("frequency", frequency)}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="How often?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quickFrequencies.map((freq) => (
+                        <SelectItem key={freq} value={freq}>{freq}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity *</Label>
+                  <Select value={formData.quantity} onValueChange={(quantity) => handleUpdateField("quantity", quantity)}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue placeholder="How much?" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quickQuantities.map((qty) => (
+                        <SelectItem key={qty} value={qty}>{qty}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="refills">Refills</Label>
+                  <Select value={formData.refills.toString()} onValueChange={(refills) => handleUpdateField("refills", parseInt(refills))}>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">No refills</SelectItem>
+                      <SelectItem value="1">1 refill</SelectItem>
+                      <SelectItem value="2">2 refills</SelectItem>
+                      <SelectItem value="3">3 refills</SelectItem>
+                      <SelectItem value="5">5 refills</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2 flex items-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={quickFillCommon}
+                    className="h-11 w-full"
+                    disabled={!selectedMedication}
+                  >
+                    Quick Fill Instructions
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="instructions">Patient Instructions</Label>
+                <Textarea 
+                  id="instructions" 
+                  value={formData.instructions} 
+                  onChange={(e) => handleUpdateField("instructions", e.target.value)}
+                  placeholder="Instructions for the patient..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input 
-                id="quantity" 
-                value={formData.quantity} 
-                onChange={(e) => handleUpdateField("quantity", e.target.value)}
-                placeholder="e.g., 30 tablets, 90 days supply"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="refills">Refills</Label>
-              <Input 
-                id="refills" 
-                type="number" 
-                min="0"
-                max="5"
-                value={formData.refills} 
-                onChange={(e) => handleUpdateField("refills", parseInt(e.target.value) || 0)}
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="instructions">Patient Instructions</Label>
-            <Textarea 
-              id="instructions" 
-              value={formData.instructions} 
-              onChange={(e) => handleUpdateField("instructions", e.target.value)}
-              placeholder="Take with food, avoid alcohol, etc..."
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="notes">Provider Notes (Internal)</Label>
-            <Textarea 
-              id="notes" 
-              value={formData.notes} 
-              onChange={(e) => handleUpdateField("notes", e.target.value)}
-              placeholder="Internal notes for pharmacy or records..."
-              rows={2}
-            />
-          </div>
-          
-          <Separator />
-          
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={resetForm}>Reset Form</Button>
-            <Button onClick={handleGeneratePrescription}>
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={resetForm}>
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+            <Button onClick={handleGeneratePrescription} size="lg">
               <FileText className="h-4 w-4 mr-2" />
-              Generate Prescription
+              Create Prescription
             </Button>
           </div>
         </>
@@ -269,13 +281,18 @@ export function PrescriptionBuilder() {
         generatedPrescription && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Prescription Preview</h3>
+              <h3 className="text-xl font-semibold">Prescription Ready</h3>
               <div className="space-x-2">
                 <Button variant="outline" onClick={() => setShowPreview(false)}>
-                  Edit Prescription
+                  Edit
                 </Button>
                 <Button variant="outline" onClick={resetForm}>
+                  <RotateCcw className="h-4 w-4 mr-2" />
                   New Prescription
+                </Button>
+                <Button>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send to Pharmacy
                 </Button>
               </div>
             </div>

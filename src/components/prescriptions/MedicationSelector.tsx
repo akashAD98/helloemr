@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Search, AlertTriangle } from "lucide-react";
+import { Plus, Search, AlertTriangle, Pill } from "lucide-react";
 import { medicationDatabase, medicationCategories, Medication } from "@/data/medicationDatabase";
 
 interface MedicationSelectorProps {
@@ -30,7 +29,7 @@ export function MedicationSelector({
 }: MedicationSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [isAddingCustom, setIsAddingCustom] = useState(false);
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
   const filteredMedications = medicationDatabase.filter(med => {
     const matchesSearch = med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,9 +44,11 @@ export function MedicationSelector({
   const handleMedicationSelect = (medicationId: string) => {
     onMedicationSelect(medicationId);
     onCustomMedicationChange("");
+    setShowCustomInput(false);
     
     const medication = medicationDatabase.find(med => med.id === medicationId);
     if (medication) {
+      // Auto-fill common values to save doctor's time
       if (medication.commonDosages.length > 0) {
         onDosageChange(medication.commonDosages[0]);
       }
@@ -60,69 +61,53 @@ export function MedicationSelector({
     }
   };
 
-  const handleCustomMedicationSubmit = () => {
+  const handleCustomMedicationAdd = () => {
     if (customMedication.trim()) {
       onMedicationSelect("");
-      setIsAddingCustom(false);
+      setShowCustomInput(false);
+      setSearchTerm("");
     }
+  };
+
+  const clearMedication = () => {
+    onMedicationSelect("");
+    onCustomMedicationChange("");
+    setShowCustomInput(false);
+    setSearchTerm("");
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label>Medication Selection</Label>
-        <Dialog open={isAddingCustom} onOpenChange={setIsAddingCustom}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Custom
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Custom Medication</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="custom-med">Medication Name</Label>
-                <Input
-                  id="custom-med"
-                  value={customMedication}
-                  onChange={(e) => onCustomMedicationChange(e.target.value)}
-                  placeholder="Enter medication name..."
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsAddingCustom(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCustomMedicationSubmit}>
-                  Add Medication
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Label className="text-base font-medium">Medication</Label>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => setShowCustomInput(!showCustomInput)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Custom
+        </Button>
       </div>
 
-      {!customMedication && (
+      {!selectedMedicationId && !customMedication && (
         <>
           <div className="flex space-x-2">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search medications..."
+                placeholder="Type medication name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-12 text-base"
               />
             </div>
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">All Types</SelectItem>
                 {medicationCategories.map(category => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -132,82 +117,100 @@ export function MedicationSelector({
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto">
-            {filteredMedications.map((medication) => (
-              <div
-                key={medication.id}
-                className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
-                  selectedMedicationId === medication.id ? 'border-primary bg-primary/5' : ''
-                }`}
-                onClick={() => handleMedicationSelect(medication.id)}
-              >
-                <div className="space-y-2">
-                  <div className="flex items-start justify-between">
-                    <h4 className="font-medium text-sm">{medication.name}</h4>
-                    {medication.controlled && (
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{medication.brandName}</p>
-                  <Badge variant="secondary" className="text-xs">
-                    {medication.category}
-                  </Badge>
-                  <div className="text-xs text-muted-foreground">
-                    Strengths: {medication.strength.join(", ")}
+          {searchTerm && (
+            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border rounded-lg p-2">
+              {filteredMedications.slice(0, 8).map((medication) => (
+                <div
+                  key={medication.id}
+                  className="p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 hover:border-primary"
+                  onClick={() => handleMedicationSelect(medication.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Pill className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium">{medication.name}</h4>
+                        <p className="text-sm text-muted-foreground">{medication.brandName}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="secondary" className="text-xs mb-1">
+                        {medication.category}
+                      </Badge>
+                      {medication.controlled && (
+                        <div className="flex items-center text-amber-600">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          <span className="text-xs">Controlled</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))}
+              {filteredMedications.length === 0 && (
+                <div className="p-4 text-center text-muted-foreground">
+                  No medications found. Try a different search term.
+                </div>
+              )}
+            </div>
+          )}
+
+          {showCustomInput && (
+            <div className="p-3 border rounded-lg bg-muted/20">
+              <Label className="text-sm font-medium mb-2 block">Custom Medication Name</Label>
+              <div className="flex space-x-2">
+                <Input
+                  value={customMedication}
+                  onChange={(e) => onCustomMedicationChange(e.target.value)}
+                  placeholder="Enter medication name..."
+                  className="flex-1"
+                />
+                <Button onClick={handleCustomMedicationAdd} disabled={!customMedication.trim()}>
+                  Add
+                </Button>
+                <Button variant="outline" onClick={() => setShowCustomInput(false)}>
+                  Cancel
+                </Button>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </>
       )}
 
-      {customMedication && (
-        <div className="p-3 border rounded-lg bg-muted/30">
+      {(selectedMedication || customMedication) && (
+        <div className="p-4 border rounded-lg bg-green-50 border-green-200">
           <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-medium">Custom Medication</h4>
-              <p className="text-sm text-muted-foreground">{customMedication}</p>
+            <div className="flex items-center space-x-3">
+              <Pill className="h-5 w-5 text-green-600" />
+              <div>
+                <h4 className="font-semibold text-green-900">
+                  {customMedication || selectedMedication?.name}
+                </h4>
+                {selectedMedication && (
+                  <div className="space-y-1 mt-1">
+                    <p className="text-sm text-green-700">{selectedMedication.brandName}</p>
+                    <div className="flex items-center space-x-4 text-xs text-green-600">
+                      <span>Strengths: {selectedMedication.strength.join(", ")}</span>
+                      <Badge variant="outline" className="text-xs">
+                        {selectedMedication.category}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => onCustomMedicationChange("")}
-            >
-              Remove
+            <Button variant="outline" size="sm" onClick={clearMedication}>
+              Change
             </Button>
           </div>
-        </div>
-      )}
-
-      {selectedMedication && (
-        <div className="p-3 border rounded-lg bg-blue-50">
-          <h4 className="font-medium mb-2">Selected: {selectedMedication.name}</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="font-medium">Available Strengths:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {selectedMedication.strength.map(str => (
-                  <Badge key={str} variant="outline" className="text-xs">
-                    {str}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div>
-              <span className="font-medium">Common Frequencies:</span>
-              <div className="text-xs text-muted-foreground mt-1">
-                {selectedMedication.commonFrequencies.join(", ")}
-              </div>
-            </div>
-          </div>
-          {selectedMedication.warnings && (
-            <div className="mt-2 p-2 bg-amber-50 rounded border-l-4 border-amber-400">
+          
+          {selectedMedication?.warnings && (
+            <div className="mt-3 p-2 bg-amber-50 rounded border-l-4 border-amber-400">
               <div className="flex items-center">
                 <AlertTriangle className="h-4 w-4 text-amber-600 mr-2" />
-                <span className="text-sm font-medium text-amber-800">Warnings:</span>
+                <span className="text-sm font-medium text-amber-800">Important:</span>
               </div>
-              <ul className="text-xs text-amber-700 mt-1 ml-6">
+              <ul className="text-xs text-amber-700 mt-1 ml-6 space-y-1">
                 {selectedMedication.warnings.map((warning, idx) => (
                   <li key={idx}>• {warning}</li>
                 ))}
