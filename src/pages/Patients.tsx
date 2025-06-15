@@ -18,32 +18,17 @@ import { PlusCircle, Search, RefreshCw } from "lucide-react";
 import { supabaseDataStore } from "@/lib/supabaseDataStore";
 import { Patient } from "@/types/patient";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Check authentication and load patients
+  // Load patients on component mount
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      setIsAuthenticated(false);
-      toast.error("Please sign in to view patients");
-      return;
-    }
-    
-    setIsAuthenticated(true);
     loadPatients();
-  };
+  }, []);
 
   const loadPatients = async () => {
     try {
@@ -74,21 +59,6 @@ export default function Patients() {
   const handleNewPatient = () => {
     toast.info("New patient registration will be available soon");
   };
-
-  if (!isAuthenticated) {
-    return (
-      <PageContainer>
-        <div className="p-6 space-y-6">
-          <Card>
-            <CardContent className="p-6 text-center">
-              <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
-              <p className="text-muted-foreground">Please sign in to view and manage patients.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer>
