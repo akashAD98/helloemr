@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UserPlus, Users } from "lucide-react";
 import { AppointmentFormDialog } from "./AppointmentFormDialog";
 import { NewPatientAppointmentForm } from "./NewPatientAppointmentForm";
@@ -22,28 +22,25 @@ interface NewAppointmentWizardProps {
   onSubmit: (data: any) => void;
 }
 
+type WizardStep = 'selection' | 'existing-patient' | 'new-patient';
+
 export function NewAppointmentWizard({
   open,
   selectedDate,
   onOpenChange,
   onSubmit
 }: NewAppointmentWizardProps) {
-  const [step, setStep] = useState<'selection' | 'existing-patient' | 'new-patient'>('selection');
+  const [step, setStep] = useState<WizardStep>('selection');
 
-  const resetWizard = () => {
-    setStep('selection');
-  };
+  const resetWizard = () => setStep('selection');
 
   const handleClose = () => {
     resetWizard();
     onOpenChange(false);
   };
 
-  const handleBackToSelection = () => {
-    setStep('selection');
-  };
+  const handleBackToSelection = () => setStep('selection');
 
-  // Handle appointment creation and close dialog
   const handleAppointmentSubmit = async (data: any) => {
     try {
       // Save to Supabase
@@ -62,45 +59,53 @@ export function NewAppointmentWizard({
     }
   };
 
+  const SelectionStep = () => (
+    <>
+      <DialogHeader>
+        <DialogTitle>New Appointment</DialogTitle>
+        <DialogDescription>
+          Choose how you'd like to schedule the appointment
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="grid gap-4 py-4">
+        <Card 
+          className="cursor-pointer hover:bg-accent/50 transition-colors" 
+          onClick={() => setStep('existing-patient')}
+        >
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-lg">
+              <Users className="mr-3 h-5 w-5 text-blue-600" />
+              Select Existing Patient
+            </CardTitle>
+            <CardDescription>
+              Choose from registered patients and schedule an appointment
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        <Card 
+          className="cursor-pointer hover:bg-accent/50 transition-colors" 
+          onClick={() => setStep('new-patient')}
+        >
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-lg">
+              <UserPlus className="mr-3 h-5 w-5 text-green-600" />
+              Add New Patient & Schedule
+            </CardTitle>
+            <CardDescription>
+              Register a new patient and create their first appointment
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    </>
+  );
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
-        {step === 'selection' && (
-          <>
-            <DialogHeader>
-              <DialogTitle>New Appointment</DialogTitle>
-              <DialogDescription>
-                Choose how you'd like to schedule the appointment
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid gap-4 py-4">
-              <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setStep('existing-patient')}>
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center text-lg">
-                    <Users className="mr-3 h-5 w-5 text-blue-600" />
-                    Select Existing Patient
-                  </CardTitle>
-                  <CardDescription>
-                    Choose from registered patients and schedule an appointment
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setStep('new-patient')}>
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center text-lg">
-                    <UserPlus className="mr-3 h-5 w-5 text-green-600" />
-                    Add New Patient & Schedule
-                  </CardTitle>
-                  <CardDescription>
-                    Register a new patient and create their first appointment
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </>
-        )}
+        {step === 'selection' && <SelectionStep />}
 
         {step === 'existing-patient' && (
           <AppointmentFormDialog

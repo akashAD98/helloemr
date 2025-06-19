@@ -14,8 +14,7 @@ import {
   MapPin, 
   Activity,
   ExternalLink,
-  AlertCircle,
-  Calendar
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Appointment, patients } from "@/data/mockData";
@@ -29,10 +28,7 @@ interface AppointmentCardProps {
 export function AppointmentCard({ appointment, onStatusChange, isOngoing }: AppointmentCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Get patient details
   const patient = patients.find(p => p.id === appointment.patientId);
-  
-  // Get initials for avatar
   const initials = appointment.patientName
     .split(" ")
     .map((n) => n[0])
@@ -40,14 +36,98 @@ export function AppointmentCard({ appointment, onStatusChange, isOngoing }: Appo
     .toUpperCase();
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-600 bg-green-50 border-green-200';
-      case 'booked': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'pending': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'cancelled': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
+    const statusColors = {
+      'completed': 'text-green-600 bg-green-50 border-green-200',
+      'booked': 'text-blue-600 bg-blue-50 border-blue-200',
+      'pending': 'text-yellow-600 bg-yellow-50 border-yellow-200',
+      'cancelled': 'text-red-600 bg-red-50 border-red-200'
+    };
+    return statusColors[status as keyof typeof statusColors] || 'text-gray-600 bg-gray-50 border-gray-200';
   };
+
+  const PatientDetails = () => patient && isExpanded ? (
+    <div className="mt-3 pt-3 border-t border-gray-200/60">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div className="flex items-center gap-2">
+          <User className="h-4 w-4 text-muted-foreground" />
+          <span>{patient.age} years • {patient.gender}</span>
+          {patient.pronouns && <span>({patient.pronouns})</span>}
+        </div>
+        <div className="flex items-center gap-2">
+          <Phone className="h-4 w-4 text-muted-foreground" />
+          <span>{patient.contactInfo.phone}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          <span>{patient.contactInfo.email}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs">{patient.contactInfo.address}</span>
+        </div>
+        {patient.medicalHistory && patient.medicalHistory.length > 0 && (
+          <div className="col-span-full flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div>
+              <span className="font-medium">Medical History: </span>
+              <span className="text-muted-foreground">
+                {patient.medicalHistory.join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  ) : null;
+
+  const ActionButtons = () => (
+    <div className="flex flex-col gap-2 ml-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="text-xs"
+      >
+        {isExpanded ? "Less Info" : "More Info"}
+      </Button>
+      
+      {appointment.status === "pending" && (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => onStatusChange(appointment.id, "booked")}
+          className="text-xs"
+        >
+          <Clock className="h-3 w-3 mr-1" />
+          Confirm
+        </Button>
+      )}
+      
+      {appointment.status === "booked" && !isOngoing && (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => onStatusChange(appointment.id, "completed")}
+          className="text-xs"
+        >
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Complete
+        </Button>
+      )}
+
+      {isOngoing && (
+        <Button 
+          variant="default" 
+          size="sm"
+          onClick={() => onStatusChange(appointment.id, "completed")}
+          className="text-xs bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Finish
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <div 
@@ -70,7 +150,7 @@ export function AppointmentCard({ appointment, onStatusChange, isOngoing }: Appo
           )}
         </div>
 
-        {/* Patient Avatar and Basic Info */}
+        {/* Patient Info */}
         <div className="flex items-start gap-3 flex-1">
           <Avatar className="h-12 w-12">
             <AvatarImage src={patient?.image} alt={appointment.patientName} />
@@ -106,91 +186,11 @@ export function AppointmentCard({ appointment, onStatusChange, isOngoing }: Appo
               </div>
             )}
 
-            {/* Patient Details (when expanded) */}
-            {isExpanded && patient && (
-              <div className="mt-3 pt-3 border-t border-gray-200/60">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{patient.age} years • {patient.gender}</span>
-                    {patient.pronouns && <span>({patient.pronouns})</span>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{patient.contactInfo.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{patient.contactInfo.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-xs">{patient.contactInfo.address}</span>
-                  </div>
-                  {patient.medicalHistory && patient.medicalHistory.length > 0 && (
-                    <div className="col-span-full flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-                      <div>
-                        <span className="font-medium">Medical History: </span>
-                        <span className="text-muted-foreground">
-                          {patient.medicalHistory.join(", ")}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            <PatientDetails />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col gap-2 ml-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs"
-          >
-            {isExpanded ? "Less Info" : "More Info"}
-          </Button>
-          
-          {appointment.status === "pending" && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => onStatusChange(appointment.id, "booked")}
-              className="text-xs"
-            >
-              <Clock className="h-3 w-3 mr-1" />
-              Confirm
-            </Button>
-          )}
-          
-          {appointment.status === "booked" && !isOngoing && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => onStatusChange(appointment.id, "completed")}
-              className="text-xs"
-            >
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Complete
-            </Button>
-          )}
-
-          {isOngoing && (
-            <Button 
-              variant="default" 
-              size="sm"
-              onClick={() => onStatusChange(appointment.id, "completed")}
-              className="text-xs bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Finish
-            </Button>
-          )}
-        </div>
+        <ActionButtons />
       </div>
     </div>
   );
