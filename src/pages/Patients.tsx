@@ -69,7 +69,7 @@ export default function Patients() {
       console.log('Importing demo data to Supabase...');
       
       for (const patient of mockPatients) {
-        const patientName = patient.name || `${patient.firstName ?? ''} ${patient.lastName ?? ''}`.trim() || 'Unknown Patient';
+        const patientName = patient.name || 'Unknown Patient';
         console.log('Adding patient:', patientName);
         await supabaseDataStore.addPatient(patient);
       }
@@ -162,7 +162,7 @@ export default function Patients() {
                   <PatientCard
                     key={patient.id}
                     id={patient.id}
-                    name={patient.name || `${patient.firstName} ${patient.lastName}` || "Unknown"}
+                    name={patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || "Unknown"}
                     age={patient.age || 0}
                     gender={patient.gender}
                     pronouns={patient.pronouns}
@@ -196,7 +196,7 @@ export default function Patients() {
                         onClick={() => window.location.href = `/patients/${patient.id}`}
                       >
                         <TableCell className="font-medium">
-                          {patient.name || `${patient.firstName} ${patient.lastName}` || "Unknown"}
+                          {patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || "Unknown"}
                         </TableCell>
                         <TableCell>{patient.gender}</TableCell>
                         <TableCell>{patient.age} years</TableCell>
