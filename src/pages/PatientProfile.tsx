@@ -346,34 +346,37 @@ export default function PatientProfile() {
 
   return (
     <PageContainer>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         <PageHeader 
           title="Patient Profile" 
           actions={
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="outline" size="sm">
                 <Phone className="h-4 w-4 mr-2" />
-                Call
+                <span className="hidden sm:inline">Call</span>
               </Button>
               <Button variant="outline" size="sm">
                 <MessageCircle className="h-4 w-4 mr-2" />
-                Message
+                <span className="hidden sm:inline">Message</span>
               </Button>
               <Button 
                 size="sm" 
                 onClick={handleAudioRecording}
                 disabled={isProcessingAudio}
                 variant={isRecording ? "destructive" : "default"}
+                className="whitespace-nowrap"
               >
                 {isRecording ? (
                   <>
                     <MicOff className="h-4 w-4 mr-2" />
-                    Stop Recording ({formatTime(recordingTime)})
+                    <span className="hidden sm:inline">Stop Recording ({formatTime(recordingTime)})</span>
+                    <span className="sm:hidden">Stop ({formatTime(recordingTime)})</span>
                   </>
                 ) : (
                   <>
                     <Mic className="h-4 w-4 mr-2" />
-                    {isProcessingAudio ? "Processing..." : "Audio Note"}
+                    <span className="hidden sm:inline">{isProcessingAudio ? "Processing..." : "Audio Note"}</span>
+                    <span className="sm:hidden">{isProcessingAudio ? "Processing" : "Audio"}</span>
                   </>
                 )}
               </Button>
@@ -388,12 +391,12 @@ export default function PatientProfile() {
           />
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 order-2 lg:order-1">
             <PatientInfoSidebar patient={patient} />
           </div>
           
-          <div className="md:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
             <PatientSummary 
               patientId={id || ""}
               lastVisitDate={lastVisitDate}
@@ -409,13 +412,13 @@ export default function PatientProfile() {
               className="animate-fadeIn"
               onValueChange={setActiveTab}
             >
-              <TabsList className="grid grid-cols-6 mb-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="visits">Visits</TabsTrigger>
-                <TabsTrigger value="problems">Problems</TabsTrigger>
-                <TabsTrigger value="medications">Medications</TabsTrigger>
-                <TabsTrigger value="allergies">Allergies</TabsTrigger>
-                <TabsTrigger value="labs">Labs</TabsTrigger>
+              <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-6 w-full">
+                <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
+                <TabsTrigger value="visits" className="text-xs md:text-sm">Visits</TabsTrigger>
+                <TabsTrigger value="problems" className="text-xs md:text-sm">Problems</TabsTrigger>
+                <TabsTrigger value="medications" className="text-xs md:text-sm">Meds</TabsTrigger>
+                <TabsTrigger value="allergies" className="text-xs md:text-sm">Allergies</TabsTrigger>
+                <TabsTrigger value="labs" className="text-xs md:text-sm">Labs</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview">

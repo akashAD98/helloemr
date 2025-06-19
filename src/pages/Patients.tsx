@@ -96,34 +96,36 @@ export default function Patients() {
 
   return (
     <PageContainer>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         <PageHeader 
           title="Patients" 
           description={`Manage your patient records (${patients.length} total patients)`}
           actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={handleRefresh} disabled={loading} size="sm">
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
               {patients.length === 0 || patients === mockPatients ? (
-                <Button variant="outline" onClick={handleImportDemoData} disabled={loading}>
+                <Button variant="outline" onClick={handleImportDemoData} disabled={loading} size="sm">
                   <PlusCircle className="mr-2 h-4 w-4" />
-                  Import Demo Data
+                  <span className="hidden sm:inline">Import Demo Data</span>
+                  <span className="sm:hidden">Import</span>
                 </Button>
               ) : null}
-              <Button onClick={handleNewPatient}>
+              <Button onClick={handleNewPatient} size="sm">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                New Patient
+                <span className="hidden sm:inline">New Patient</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           }
         />
         
         <Card className="animate-fadeIn">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="relative w-full max-w-sm">
+          <CardContent className="p-4 md:p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+              <div className="relative w-full sm:max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search patients..." 
@@ -133,11 +135,12 @@ export default function Patients() {
                 />
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full sm:w-auto">
                 <Button 
                   variant={viewMode === "grid" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setViewMode("grid")}
+                  className="flex-1 sm:flex-none"
                 >
                   Grid
                 </Button>
@@ -145,6 +148,7 @@ export default function Patients() {
                   variant={viewMode === "table" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setViewMode("table")}
+                  className="flex-1 sm:flex-none"
                 >
                   Table
                 </Button>
@@ -157,7 +161,7 @@ export default function Patients() {
                 <p className="text-muted-foreground">Loading patients...</p>
               </div>
             ) : viewMode === "grid" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredPatients.map(patient => (
                   <PatientCard
                     key={patient.id}
@@ -167,6 +171,18 @@ export default function Patients() {
                     gender={patient.gender}
                     pronouns={patient.pronouns}
                     provider={patient.provider || patient.primaryProvider}
+                    image={patient.image}
+                    dateOfBirth={patient.dateOfBirth}
+                    lastVisit="Apr 12, 2024"
+                    activeProblems={2}
+                    medications={3}
+                    allergies={1}
+                    nextAppointment="May 15, 2024 at 10:30 AM with Dr. Sharma"
+                    contactInfo={{
+                      email: patient.contactInfo?.email || patient.email,
+                      phone: patient.contactInfo?.phone || patient.phone,
+                      address: patient.contactInfo?.address || patient.address
+                    }}
                   />
                 ))}
                 
@@ -177,14 +193,14 @@ export default function Patients() {
                 )}
               </div>
             ) : (
-              <div className="rounded-md border">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[300px]">Name</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Age</TableHead>
-                      <TableHead>Provider</TableHead>
+                      <TableHead className="hidden sm:table-cell">Gender</TableHead>
+                      <TableHead className="hidden sm:table-cell">Age</TableHead>
+                      <TableHead className="hidden md:table-cell">Provider</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -196,11 +212,16 @@ export default function Patients() {
                         onClick={() => window.location.href = `/patients/${patient.id}`}
                       >
                         <TableCell className="font-medium">
-                          {patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || "Unknown"}
+                          <div>
+                            <div>{patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || "Unknown"}</div>
+                            <div className="text-sm text-muted-foreground sm:hidden">
+                              {patient.gender} • {patient.age} years
+                            </div>
+                          </div>
                         </TableCell>
-                        <TableCell>{patient.gender}</TableCell>
-                        <TableCell>{patient.age} years</TableCell>
-                        <TableCell>{patient.provider || patient.primaryProvider}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{patient.gender}</TableCell>
+                        <TableCell className="hidden sm:table-cell">{patient.age} years</TableCell>
+                        <TableCell className="hidden md:table-cell">{patient.provider || patient.primaryProvider}</TableCell>
                         <TableCell>
                           {patient.active !== false ? (
                             <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
