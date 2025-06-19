@@ -69,7 +69,7 @@ export default function Patients() {
       console.log('Importing demo data to Supabase...');
       
       for (const patient of mockPatients) {
-        const patientName = patient.name || `${patient.firstName || ''} ${patient.lastName || ''}`.trim() || 'Unknown Patient';
+        const patientName = patient.name || `${patient.firstName ?? ''} ${patient.lastName ?? ''}`.trim() || 'Unknown Patient';
         console.log('Adding patient:', patientName);
         await supabaseDataStore.addPatient(patient);
       }
