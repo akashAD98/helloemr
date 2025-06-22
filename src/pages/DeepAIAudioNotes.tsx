@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -13,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Settings, FileText, ArrowLeft } from "lucide-react";
+import { DeepAIAudioForm } from "@/components/patient-details/forms/DeepAIAudioForm";
 
 type ViewMode = "setup" | "templates";
 
@@ -213,14 +213,6 @@ export default function DeepAIAudioNotes() {
                     />
                   </div>
 
-                  {/* Microphone Access Warning */}
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 text-orange-800">
-                      <span>⚠️</span>
-                      <span className="text-sm">Microphone access needed. Click to enable or update settings.</span>
-                    </div>
-                  </div>
-
                   {/* Process Next Button */}
                   <Button onClick={handleProcessNext} className="w-full bg-green-500 hover:bg-green-600" size="lg">
                     <Save className="h-4 w-4 mr-2" />
@@ -284,6 +276,13 @@ export default function DeepAIAudioNotes() {
             </Card>
           </div>
         </div>
+
+        <DeepAIAudioForm
+          patientId={"patientId"}
+          onSaveNote={(note) => {
+            // handle the saved note, e.g., show a toast or update state
+          }}
+        />
       </div>
     </PageContainer>
   );

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +36,7 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
   const { 
     isRecording, 
     audioUrl, 
+    audioBlob,
     recordingTime,
     startRecording, 
     stopRecording,
@@ -60,16 +60,30 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
     }
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     stopRecording();
     setIsProcessing(true);
-    
-    // Simulate AI transcription
-    setTimeout(() => {
-      const mockTranscription = `Patient ${patientName} presents for ${visitType.toLowerCase()}. Chief complaint and assessment findings documented during visit. Patient reports current symptoms and treatment response. Examination completed with findings noted. Plan of care discussed with patient including follow-up recommendations.`;
-      setTranscribedText(mockTranscription);
+    try {
+      if (!audioBlob) {
+        setIsProcessing(false);
+        return;
+      }
+      const response = await fetch('https://chatbot.deepaarogya.com/nlp/v1/transcribe/audio/soap_notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'audio/wav',
+          'Authorization': 'Bearer 12345', // Replace with real token in production
+          'Accept': '*/*',
+        },
+        body: audioBlob,
+      });
+      const data = await response.json();
+      setTranscribedText(data.soapNote || JSON.stringify(data));
+    } catch (error) {
+      setTranscribedText("Error generating SOAP note.");
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const handleCaptureConversation = () => {
@@ -173,47 +187,32 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
         />
       </div>
 
-      {/* Microphone Access Alert */}
-      {!microphoneEnabled && (
-        <Alert className="border-orange-200 bg-orange-50">
-          <AlertDescription className="text-orange-800">
-            ⚠️ Microphone access needed. Click to enable or update settings.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Audio Recording Controls */}
       <div className="flex flex-col items-center space-y-4">
         <Button
           size="lg"
-          onClick={handleCaptureConversation}
+          onClick={isRecording ? handleStopRecording : handleStartRecording}
           disabled={isProcessing}
-          className={`px-8 py-6 text-lg ${
-            isRecording 
-              ? "bg-red-500 hover:bg-red-600" 
-              : "bg-green-500 hover:bg-green-600"
-          }`}
+          className={`px-8 py-6 text-lg ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}
         >
           {isRecording ? (
             <>
               <MicOff className="mr-2 h-5 w-5" />
-              STOP RECORDING ({formatTime(recordingTime)})
+              Stop Recording
             </>
           ) : (
             <>
               <Mic className="mr-2 h-5 w-5" />
-              🎤 CAPTURE CONVERSATION
+              Start Recording
             </>
           )}
         </Button>
-
-        {audioUrl && (
+        {audioUrl && false && (
           <Button variant="outline" onClick={playAudio}>
             <Play className="mr-2 h-4 w-4" />
             Play Recording
           </Button>
         )}
-
         {isProcessing && (
           <div className="text-center text-muted-foreground">
             Processing audio and generating notes...

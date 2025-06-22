@@ -1,9 +1,9 @@
-
 import { useState, useRef, useEffect } from "react";
 
 interface UseAudioRecordingReturn {
   isRecording: boolean;
   audioUrl: string | null;
+  audioBlob: Blob | null;
   recordingTime: number;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
@@ -13,6 +13,7 @@ interface UseAudioRecordingReturn {
 export function useAudioRecording(): UseAudioRecordingReturn {
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -33,6 +34,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
+      setAudioBlob(null);
       
       mediaRecorder.ondataavailable = (e) => {
         chunksRef.current.push(e.data);
@@ -40,6 +42,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
       
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        setAudioBlob(audioBlob);
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
       };
@@ -80,6 +83,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
   return {
     isRecording,
     audioUrl,
+    audioBlob,
     recordingTime,
     startRecording,
     stopRecording,
