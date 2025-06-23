@@ -1,13 +1,15 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Upload, ArrowLeft, Download, FileUp, X, CheckCircle } from "lucide-react";
+import { FileText, Upload, ArrowLeft, Download, FileUp, X, CheckCircle, Copy, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 
 interface UploadedFile {
   id: string;
@@ -23,6 +25,7 @@ interface GeneratedSummary {
   summaryType: string;
   content: string;
   timestamp: Date;
+  isEditing: boolean;
 }
 
 export function DocumentSummarizer() {
@@ -30,18 +33,18 @@ export function DocumentSummarizer() {
   const { toast } = useToast();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [summaries, setSummaries] = useState<GeneratedSummary[]>([]);
-  const [selectedSummaryType, setSelectedSummaryType] = useState<string>("discharge");
+  const [selectedSummaryType, setSelectedSummaryType] = useState<string>("discharge_summary");
   const [isProcessing, setIsProcessing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressText, setProgressText] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const summaryTypes = [
-    { value: "discharge", label: "Discharge Summary" },
-    { value: "clinical", label: "Clinical Notes" },
-    { value: "referral", label: "Referral Summary" },
-    { value: "lab", label: "Lab Report Analysis" },
-    { value: "progress", label: "Progress Notes" },
-    { value: "consultation", label: "Consultation Summary" }
+    { value: "discharge_summary", label: "Discharge Summary", description: "Comprehensive summary of hospital stay including admission details, procedures, diagnosis, and follow-up instructions." },
+    { value: "clinical_notes_summary", label: "Clinical Notes Summary", description: "Provides a structured overview of patient information, subjective/objective findings, assessments, and plans." },
+    { value: "referral_summary", label: "Referral Summary", description: "Summarizes the reason for referral, relevant history, and key clinical information for the receiving provider." }
   ];
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -64,6 +67,16 @@ export function DocumentSummarizer() {
 
   const handleFileUpload = (files: File[]) => {
     files.forEach((file) => {
+      // Check file size - limit to 100MB
+      if (file.size > 100 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "File size exceeds the 100MB limit. Please upload a smaller file.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
         const fileId = `file-${Date.now()}-${Math.random()}`;
         const fileUrl = URL.createObjectURL(file);
@@ -96,47 +109,174 @@ export function DocumentSummarizer() {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const generateSummary = async (file: UploadedFile) => {
-    setIsProcessing(true);
+  const startProgress = () => {
+    setProgress(0);
+    setProgressText("Processing document...");
     
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const summaryContent = generateMockSummary(selectedSummaryType, file.name);
-    
-    const newSummary: GeneratedSummary = {
-      id: `summary-${Date.now()}`,
-      fileName: file.name,
-      summaryType: selectedSummaryType,
-      content: summaryContent,
-      timestamp: new Date()
-    };
-    
-    setSummaries(prev => [...prev, newSummary]);
-    setIsProcessing(false);
-    
-    toast({
-      title: "Summary Generated",
-      description: `${summaryTypes.find(t => t.value === selectedSummaryType)?.label} created for ${file.name}`
-    });
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        const increment = Math.random() * 15;
+        const newProgress = prev + increment;
+        
+        if (newProgress > 30) setProgressText("Analyzing content...");
+        if (newProgress > 60) setProgressText("Generating summary...");
+        if (newProgress > 80) setProgressText("Finalizing...");
+        
+        return Math.min(90, newProgress);
+      });
+    }, 500);
+
+    return interval;
   };
 
-  const generateMockSummary = (type: string, fileName: string): string => {
-    const summaryTemplates = {
-      discharge: `**DISCHARGE SUMMARY**\n\n**Patient:** John Doe\n**Date of Admission:** March 15, 2024\n**Date of Discharge:** March 20, 2024\n\n**Chief Complaint:** Chest pain and shortness of breath\n\n**Hospital Course:**\nPatient presented with acute onset chest pain. Initial workup including ECG, chest X-ray, and cardiac enzymes were performed. Patient was diagnosed with acute coronary syndrome and managed with antiplatelet therapy and cardiac monitoring.\n\n**Discharge Medications:**\n• Aspirin 81mg daily\n• Atorvastatin 40mg daily\n• Metoprolol 25mg twice daily\n\n**Follow-up Instructions:**\n• Cardiology appointment in 1 week\n• Primary care follow-up in 2 weeks\n• Return to ED if experiencing severe chest pain\n\n**Condition at Discharge:** Stable`,
-      
-      clinical: `**CLINICAL NOTES**\n\n**Date:** March 20, 2024\n**Provider:** Dr. Smith\n\n**Subjective:**\nPatient reports improvement in chest pain since admission. Denies shortness of breath at rest. Ambulating without difficulty.\n\n**Objective:**\n• Vital Signs: BP 120/80, HR 72, RR 16, O2 Sat 98% on room air\n• Physical Exam: Heart regular rate and rhythm, lungs clear\n• Labs: Troponin negative, BNP normal\n\n**Assessment:**\n• Acute coronary syndrome, resolved\n• Hypertension, controlled\n\n**Plan:**\n• Continue current medications\n• Cardiac rehabilitation referral\n• Lifestyle modifications counseling`,
-      
-      referral: `**REFERRAL SUMMARY**\n\n**Referring Provider:** Dr. Johnson\n**Specialist:** Cardiology\n\n**Reason for Referral:**\nPatient with recent acute coronary syndrome requiring specialized cardiac evaluation and ongoing management.\n\n**Relevant History:**\n• 58-year-old male with hypertension\n• Recent hospitalization for chest pain\n• Family history of coronary artery disease\n\n**Current Medications:**\n• Aspirin, Atorvastatin, Metoprolol\n\n**Requested Services:**\n• Comprehensive cardiac evaluation\n• Risk stratification\n• Long-term management plan\n\n**Urgency:** Routine (within 2 weeks)`,
-      
-      lab: `**LAB REPORT ANALYSIS**\n\n**Test Date:** March 20, 2024\n\n**Key Findings:**\n• Complete Blood Count: Within normal limits\n• Comprehensive Metabolic Panel: Glucose 95 mg/dL, Creatinine 1.0 mg/dL\n• Lipid Panel: Total cholesterol 220 mg/dL (elevated), LDL 140 mg/dL (elevated)\n• Cardiac Markers: Troponin I <0.01 ng/mL (normal)\n\n**Clinical Significance:**\n• Elevated cholesterol requiring statin therapy\n• Normal kidney function\n• No evidence of myocardial injury\n\n**Recommendations:**\n• Continue statin therapy\n• Repeat lipid panel in 6 weeks\n• Dietary counseling`,
-      
-      progress: `**PROGRESS NOTES**\n\n**Date:** March 20, 2024\n**Day:** Hospital Day 5\n\n**Interval History:**\nPatient continues to improve. No chest pain overnight. Ambulating in hallway without difficulty.\n\n**Physical Examination:**\n• Vital signs stable\n• Cardiovascular: Regular rate and rhythm\n• Pulmonary: Clear to auscultation\n\n**Laboratory Data:**\n• Morning labs pending\n• Previous troponin negative\n\n**Assessment and Plan:**\n• Acute coronary syndrome - improving\n• Plan for discharge today\n• Medications reconciled\n• Follow-up arranged`,
-      
-      consultation: `**CONSULTATION SUMMARY**\n\n**Consulting Service:** Cardiology\n**Date:** March 18, 2024\n\n**History of Present Illness:**\nPatient referred for evaluation of chest pain. Presented with typical anginal symptoms with positive stress test.\n\n**Assessment:**\n• Non-ST elevation myocardial infarction\n• Moderate risk for recurrent events\n\n**Recommendations:**\n• Dual antiplatelet therapy\n• High-intensity statin\n• ACE inhibitor if tolerated\n• Cardiac catheterization consideration\n\n**Follow-up:**\n• Outpatient cardiology in 1-2 weeks\n• Risk factor modification counseling`
-    };
+  const generateSummary = async (file: UploadedFile) => {
+    setError(null);
+    setIsProcessing(true);
+    const progressInterval = startProgress();
     
-    return summaryTemplates[type as keyof typeof summaryTemplates] || summaryTemplates.clinical;
+    try {
+      const formData = new FormData();
+      
+      // Get the file from the URL
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      formData.append('file', blob, file.name);
+      
+      // Add summary type and other parameters
+      formData.append('type_of_summary', selectedSummaryType);
+      
+      const apiResponse = await fetch('https://chatbot.deepaarogya.com/nlp/v1/chatbot/summary/deep_medical_summary_service', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 12345'
+        },
+        body: formData
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Server error (${apiResponse.status}): ${apiResponse.statusText}`);
+      }
+
+      const data = await apiResponse.json();
+      
+      if (!data.summary) {
+        throw new Error("No summary was generated");
+      }
+
+      clearInterval(progressInterval);
+      setProgress(100);
+      setProgressText("Complete!");
+
+      const newSummary: GeneratedSummary = {
+        id: `summary-${Date.now()}`,
+        fileName: file.name,
+        summaryType: selectedSummaryType,
+        content: data.summary,
+        timestamp: new Date(),
+        isEditing: false
+      };
+      
+      setSummaries(prev => [...prev, newSummary]);
+      
+      toast({
+        title: "Summary Generated",
+        description: `${summaryTypes.find(t => t.value === selectedSummaryType)?.label} created for ${file.name}`
+      });
+    } catch (error) {
+      clearInterval(progressInterval);
+      setProgress(0);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred");
+      
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate summary",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+      setProgressText("");
+    }
+  };
+
+  const toggleEdit = (summaryId: string) => {
+    setSummaries(prev => prev.map(summary => 
+      summary.id === summaryId 
+        ? { ...summary, isEditing: !summary.isEditing }
+        : summary
+    ));
+  };
+
+  const updateSummaryContent = (summaryId: string, newContent: string) => {
+    setSummaries(prev => prev.map(summary => 
+      summary.id === summaryId 
+        ? { ...summary, content: newContent }
+        : summary
+    ));
+  };
+
+  const copyToClipboard = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      toast({
+        title: "Copied to clipboard",
+        description: "Summary content has been copied to your clipboard"
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Please try copying manually",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const exportToPDF = async (summary: GeneratedSummary) => {
+    try {
+      const { jsPDF } = window as any;
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(16);
+      doc.setTextColor(46, 69, 132); // #2e4584
+      doc.text("Medical Document Summary", 20, 20);
+      
+      // Add metadata
+      doc.setFontSize(10);
+      doc.setTextColor(102, 102, 102);
+      doc.text(`File: ${summary.fileName}`, 20, 30);
+      doc.text(`Type: ${summaryTypes.find(t => t.value === summary.summaryType)?.label}`, 20, 35);
+      doc.text(`Generated: ${summary.timestamp.toLocaleString()}`, 20, 40);
+      
+      // Add content
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      const splitText = doc.splitTextToSize(summary.content, 170);
+      doc.text(splitText, 20, 50);
+      
+      // Add footer
+      doc.setFontSize(8);
+      doc.setTextColor(119, 119, 119);
+      doc.text("Generated by Deepaarogya AI", 20, doc.internal.pageSize.height - 10);
+      
+      // Save the PDF
+      doc.save(`${summary.fileName.replace('.pdf', '')}_summary.pdf`);
+      
+      toast({
+        title: "PDF Exported",
+        description: "Summary has been exported as a PDF file"
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export summary as PDF",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatFileSize = (bytes: number): string => {
@@ -172,6 +312,12 @@ export function DocumentSummarizer() {
       </Card>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         {/* Upload Section */}
         <Card>
           <CardHeader>
@@ -193,6 +339,9 @@ export function DocumentSummarizer() {
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                {summaryTypes.find(t => t.value === selectedSummaryType)?.description}
+              </p>
             </div>
 
             {/* File Upload Area */}
@@ -211,6 +360,7 @@ export function DocumentSummarizer() {
                 <div>
                   <p className="text-lg font-medium">Drop PDF files here</p>
                   <p className="text-sm text-muted-foreground">or click to browse</p>
+                  <p className="text-xs text-muted-foreground mt-1">Maximum file size: 100MB</p>
                 </div>
                 <Button 
                   variant="outline"
@@ -269,6 +419,16 @@ export function DocumentSummarizer() {
                   </div>
                 ))}
               </div>
+
+              {isProcessing && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>{progressText}</span>
+                    <span>{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} />
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -293,15 +453,45 @@ export function DocumentSummarizer() {
                           {summaryTypes.find(t => t.value === summary.summaryType)?.label} • {summary.timestamp.toLocaleString()}
                         </p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Export
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(summary.content)}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleEdit(summary.id)}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          {summary.isEditing ? "Save" : "Edit"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => exportToPDF(summary)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Export
+                        </Button>
+                      </div>
                     </div>
                     <div className="bg-muted/30 rounded-md p-4">
-                      <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
-                        {summary.content}
-                      </pre>
+                      {summary.isEditing ? (
+                        <Textarea
+                          value={summary.content}
+                          onChange={(e) => updateSummaryContent(summary.id, e.target.value)}
+                          className="min-h-[200px] font-mono text-sm"
+                        />
+                      ) : (
+                        <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                          {summary.content}
+                        </pre>
+                      )}
                     </div>
                   </div>
                 ))}
