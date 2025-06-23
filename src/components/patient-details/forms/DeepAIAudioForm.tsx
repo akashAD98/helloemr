@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,7 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
   const [transcribedText, setTranscribedText] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
+  const [shouldSend, setShouldSend] = useState(false);
 
   const { 
     isRecording, 
@@ -63,28 +64,48 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
   const handleStopRecording = async () => {
     stopRecording();
     setIsProcessing(true);
-    try {
-      if (!audioBlob) {
-        setIsProcessing(false);
-        return;
-      }
-      const response = await fetch('https://chatbot.deepaarogya.com/nlp/v1/transcribe/audio/soap_notes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'audio/wav',
-          'Authorization': 'Bearer 12345', // Replace with real token in production
-          'Accept': '*/*',
-        },
-        body: audioBlob,
-      });
-      const data = await response.json();
-      setTranscribedText(data.soapNote || JSON.stringify(data));
-    } catch (error) {
-      setTranscribedText("Error generating SOAP note.");
-    } finally {
-      setIsProcessing(false);
-    }
+    setShouldSend(true);
   };
+
+  useEffect(() => {
+    const sendAudio = async () => {
+      if (!audioBlob || !shouldSend) return;
+      try {
+        // Send audioBlob as multipart/form-data with all required fields
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
+        formData.append('template_type', 'general');
+        formData.append('patient_name', patientName);
+        formData.append('visit_type', visitType);
+        formData.append('pronouns', pronouns);
+        formData.append('note_length', noteLength);
+        formData.append('past_context', pastContext);
+        const response = await fetch('https://chatbot.deepaarogya.com/nlp/v1/transcribe/audio/soap_notes', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer 12345',
+            'Accept': '*/*',
+            'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+            'Origin': 'https://chatbot.deepaarogya.com',
+            'Referer': 'https://chatbot.deepaarogya.com/deep-chatbot-service/static/soap-audio-recorder.html',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+            // The following headers are set automatically by the browser or are not allowed to be set manually:
+            // 'Content-Type', 'dnt', 'priority', 'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site'
+          },
+          body: formData,
+        });
+        const data = await response.json();
+        setTranscribedText(data.soapNote || JSON.stringify(data));
+      } catch (error) {
+        setTranscribedText("Error generating SOAP note.");
+      } finally {
+        setIsProcessing(false);
+        setShouldSend(false);
+      }
+    };
+    sendAudio();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioBlob, shouldSend]);
 
   const handleCaptureConversation = () => {
     if (isRecording) {
