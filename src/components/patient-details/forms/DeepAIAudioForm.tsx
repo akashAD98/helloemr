@@ -33,6 +33,7 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
   const [isProcessing, setIsProcessing] = useState(false);
   const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
   const [shouldSend, setShouldSend] = useState(false);
+  const [jsonResponse, setJsonResponse] = useState<any>(null);
 
   const { 
     isRecording, 
@@ -89,15 +90,15 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
             'Origin': 'https://chatbot.deepaarogya.com',
             'Referer': 'https://chatbot.deepaarogya.com/deep-chatbot-service/static/soap-audio-recorder.html',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
-            // The following headers are set automatically by the browser or are not allowed to be set manually:
-            // 'Content-Type', 'dnt', 'priority', 'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform', 'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site'
           },
           body: formData,
         });
         const data = await response.json();
         setTranscribedText(data.soapNote || JSON.stringify(data));
+        setJsonResponse(data);
       } catch (error) {
         setTranscribedText("Error generating SOAP note.");
+        setJsonResponse(null);
       } finally {
         setIsProcessing(false);
         setShouldSend(false);
@@ -242,15 +243,21 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
       </div>
 
       {/* Transcribed Notes */}
-      {transcribedText && (
+      {(jsonResponse || transcribedText) && (
         <div className="space-y-2">
           <Label htmlFor="transcription">Generated Notes:</Label>
-          <Textarea
-            id="transcription"
-            value={transcribedText}
-            onChange={(e) => setTranscribedText(e.target.value)}
-            className="min-h-[150px]"
-          />
+          {jsonResponse ? (
+            <pre className="bg-muted p-4 rounded text-sm text-left whitespace-pre-wrap break-words" style={{ maxHeight: 300 }}>
+              {JSON.stringify(jsonResponse, null, 2)}
+            </pre>
+          ) : (
+            <Textarea
+              id="transcription"
+              value={transcribedText}
+              onChange={(e) => setTranscribedText(e.target.value)}
+              className="min-h-[150px]"
+            />
+          )}
         </div>
       )}
 
