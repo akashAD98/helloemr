@@ -244,20 +244,37 @@ export function DeepAIAudioForm({ patientId, onSaveNote }: DeepAIAudioFormProps)
 
       {/* Transcribed Notes */}
       {(jsonResponse || transcribedText) && (
-        <div className="space-y-2">
-          <Label htmlFor="transcription">Generated Notes:</Label>
-          {jsonResponse ? (
-            <pre className="bg-muted p-4 rounded text-sm text-left whitespace-pre-wrap break-words" style={{ maxHeight: 300 }}>
-              {JSON.stringify(jsonResponse, null, 2)}
-            </pre>
-          ) : (
-            <Textarea
-              id="transcription"
-              value={transcribedText}
-              onChange={(e) => setTranscribedText(e.target.value)}
-              className="min-h-[150px]"
-            />
-          )}
+        <div className="relative bg-white dark:bg-zinc-900 shadow-lg rounded-lg p-4 mt-4 border border-muted max-w-2xl mx-auto">
+          <div className="flex items-center mb-2">
+            <span className="mr-2 text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h3m4 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v4" /></svg>
+            </span>
+            <Label htmlFor="transcription" className="text-lg font-semibold">Generated Notes</Label>
+            <button
+              className="ml-auto px-2 py-1 text-xs bg-muted rounded hover:bg-muted-foreground/10 transition-colors"
+              title="Copy to clipboard"
+              onClick={() => {
+                const text = jsonResponse ? JSON.stringify(jsonResponse, null, 2) : transcribedText;
+                navigator.clipboard.writeText(text);
+              }}
+            >
+              Copy
+            </button>
+          </div>
+          <div className="overflow-auto max-h-72">
+            {jsonResponse ? (
+              <pre className="bg-zinc-100 dark:bg-zinc-800 p-4 rounded text-sm text-left whitespace-pre-wrap break-words font-mono select-text">
+                {JSON.stringify(jsonResponse, null, 2)}
+              </pre>
+            ) : (
+              <Textarea
+                id="transcription"
+                value={transcribedText}
+                onChange={(e) => setTranscribedText(e.target.value)}
+                className="min-h-[150px] font-mono bg-zinc-100 dark:bg-zinc-800"
+              />
+            )}
+          </div>
         </div>
       )}
 
