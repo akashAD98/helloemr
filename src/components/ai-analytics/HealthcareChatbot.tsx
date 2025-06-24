@@ -156,7 +156,7 @@ export function HealthcareChatbot() {
         headers: {
           'Authorization': 'Bearer 12345'
         },
-        body: formData
+        body: formData 
       });
 
       if (!response.ok) {
@@ -548,3 +548,6 @@ export function HealthcareChatbot() {
     </div>
   );
 }
+
+
+//http://localhost:8087/nlp/v1/chatbot/chatbot/chat
