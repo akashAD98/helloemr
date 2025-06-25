@@ -85,7 +85,7 @@ export default function Auth() {
       // Create a mock session for testing
       const mockUser = {
         id: 'test-user-id',
-        email: 'user@deepai.com',
+        email: 'user@deep.com',
         user_metadata: {
           full_name: 'Test User'
         },
@@ -111,7 +111,7 @@ export default function Auth() {
     e.preventDefault();
     
     // Check for hardcoded test credentials
-    if (email === 'user@deepai.com' && password === 'deep@1234') {
+    if (email === 'user@deep.com' && password === 'deephealth') {
       await handleTestLogin();
       return;
     }
@@ -342,32 +342,6 @@ export default function Auth() {
           <p className="text-gray-600 mt-2">Electronic Medical Records System</p>
         </div>
 
-        {/* Test Login Card */}
-        <Card className="mb-4 border-green-200 bg-green-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-green-800 text-lg">Test Login</CardTitle>
-            <CardDescription className="text-green-700">
-              For testing purposes only
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={handleTestLogin} 
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
-                </>
-              ) : (
-                'Login as Test User (user@deepai.com)'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Welcome</CardTitle>
@@ -486,16 +460,6 @@ export default function Auth() {
             </Tabs>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6 text-sm text-gray-600">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <AlertCircle className="h-4 w-4" />
-            <p>For healthcare professionals only</p>
-          </div>
-          <p className="text-xs">
-            Test login: user@deepai.com / deep@1234
-          </p>
-        </div>
       </div>
     </div>
   );
