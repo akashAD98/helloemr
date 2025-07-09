@@ -1,6 +1,8 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { SidebarProvider } from '@/components/layout/SidebarProvider';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { MobileHeader } from '@/components/layout/MobileHeader';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import Dashboard from '@/pages/Dashboard';
@@ -30,21 +32,25 @@ function App() {
             <ProtectedRoute>
               <SidebarProvider>
                 <div className="flex min-h-screen w-full">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/patients" element={<Patients />} />
-                    <Route path="/patients/:id" element={<PatientProfile />} />
-                    <Route path="/appointments" element={<Appointments />} />
-                    <Route path="/deepai-audio-notes" element={<DeepAIAudioNotes />} />
-                    <Route path="/recording-session" element={<RecordingSession />} />
-                    <Route path="/ai-analytics" element={<AIAnalytics />} />
-                    <Route path="/ai-analytics/healthcare-chat" element={<HealthcareChatbot />} />
-                    <Route path="/ai-analytics/document-summary" element={<DocumentSummarizer />} />
-                    <Route path="/ai-analytics/document-qa" element={<DocumentQA />} />
-                    <Route path="/e-prescribing" element={<EPrescribing />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <Sidebar />
+                  <MobileHeader />
+                  <main className="flex-1 md:ml-20 pt-16 md:pt-0">
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/patients" element={<Patients />} />
+                      <Route path="/patients/:id" element={<PatientProfile />} />
+                      <Route path="/appointments" element={<Appointments />} />
+                      <Route path="/deepai-audio-notes" element={<DeepAIAudioNotes />} />
+                      <Route path="/recording-session" element={<RecordingSession />} />
+                      <Route path="/ai-analytics" element={<AIAnalytics />} />
+                      <Route path="/ai-analytics/healthcare-chat" element={<HealthcareChatbot />} />
+                      <Route path="/ai-analytics/document-summary" element={<DocumentSummarizer />} />
+                      <Route path="/ai-analytics/document-qa" element={<DocumentQA />} />
+                      <Route path="/e-prescribing" element={<EPrescribing />} />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </main>
                   <Toaster />
                 </div>
               </SidebarProvider>

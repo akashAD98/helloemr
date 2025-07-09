@@ -10,41 +10,83 @@ import {
   Activity,
   Brain,
   Pill,
-  Mic
+  Mic,
+  Menu,
+  X
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { useEffect } from 'react';
 
 export function Sidebar() {
-  const { isOpen, toggle } = useSidebar();
+  const { isOpen, toggle, close } = useSidebar();
   const location = useLocation();
   
+  // Close sidebar on mobile when route changes
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        close();
+      }
+    };
+    
+    // Close sidebar on mobile when clicking outside or navigating
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    
+    return () => window.removeEventListener('resize', handleResize);
+  }, [close, location.pathname]);
+  
   return (
-    <div
-      className={cn(
-        "h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 ease-in-out border-r border-border bg-white",
-        isOpen ? "w-64" : "w-20"
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={close}
+        />
       )}
-    >
+      
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 ease-in-out border-r border-border bg-white",
+          // Mobile: slide in/out, Desktop: resize
+          "md:translate-x-0",
+          isOpen 
+            ? "translate-x-0 w-64" 
+            : "-translate-x-full md:translate-x-0 md:w-20"
+        )}
+      >
       <div className="flex items-center h-16 px-4 border-b border-border justify-between">
         <div className="flex items-center gap-2 overflow-hidden">
+          <Activity className="h-6 w-6 text-medical-600 flex-shrink-0" />
           {isOpen && (
-            <span className="text-xl font-semibold text-medical-700 animate-fadeIn">Deepai EMR</span>
+            <span className="text-xl font-semibold text-medical-700 animate-fadeIn truncate">
+              Deepai EMR
+            </span>
           )}
-          {!isOpen && <Activity className="h-6 w-6 text-medical-600" />}
         </div>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={toggle}
           className="rounded-full p-1.5 hover:bg-gray-100 transition-colors"
         >
+          {isOpen ? (
+            <X className="h-4 w-4 md:hidden" />
+          ) : (
+            <Menu className="h-4 w-4 md:hidden" />
+          )}
           <ChevronLeft className={cn(
-            "h-4 w-4 transition-transform duration-300",
+            "h-4 w-4 transition-transform duration-300 hidden md:block",
             !isOpen && "rotate-180"
           )} />
-        </button>
+        </Button>
       </div>
 
       <div className="flex-1 overflow-y-auto py-4 px-3">
-        <ul className="space-y-2">
+        <nav className="space-y-2" role="navigation" aria-label="Main navigation">
           <NavItem
             to="/"
             icon={<Home className="h-5 w-5" />}
@@ -94,7 +136,7 @@ export function Sidebar() {
             isActive={location.pathname.startsWith('/settings')}
             isCollapsed={!isOpen}
           />
-        </ul>
+        </nav>
       </div>
 
       <div className="border-t border-border p-4">
@@ -111,7 +153,8 @@ export function Sidebar() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -124,21 +167,34 @@ interface NavItemProps {
 }
 
 function NavItem({ to, icon, label, isActive, isCollapsed }: NavItemProps) {
+  const { close } = useSidebar();
+  
+  const handleClick = () => {
+    // Close sidebar on mobile when navigating
+    if (window.innerWidth < 768) {
+      close();
+    }
+  };
+  
   return (
-    <li>
-      <Link
-        to={to}
-        className={cn(
-          "flex items-center p-2 rounded-lg transition-all duration-300",
-          isActive 
-            ? "bg-medical-50 text-medical-700" 
-            : "text-gray-700 hover:bg-gray-100",
-          isCollapsed ? "justify-center" : "gap-3"
-        )}
-      >
-        {icon}
-        {!isCollapsed && <span>{label}</span>}
-      </Link>
-    </li>
+    <Link
+      to={to}
+      onClick={handleClick}
+      className={cn(
+        "flex items-center p-3 rounded-lg transition-all duration-300 group",
+        isActive 
+          ? "bg-medical-50 text-medical-700 border-r-2 border-medical-600" 
+          : "text-gray-700 hover:bg-gray-100 hover:text-medical-600",
+        isCollapsed ? "justify-center" : "gap-3"
+      )}
+      aria-label={label}
+    >
+      <span className="flex-shrink-0">{icon}</span>
+      {!isCollapsed && (
+        <span className="font-medium group-hover:translate-x-1 transition-transform duration-200">
+          {label}
+        </span>
+      )}
+    </Link>
   );
 }
