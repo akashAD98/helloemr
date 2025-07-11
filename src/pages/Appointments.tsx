@@ -194,14 +194,15 @@ export default function Appointments() {
 
   return (
     <PageContainer>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         <PageHeader 
           title="Appointments" 
           description={`Schedule Management - ${format(date, "EEEE, MMMM d, yyyy")} (${appointments.length} total appointments)`}
           actions={
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => setIsDialogOpen(true)} size="sm">
               <PlusCircle className="mr-2 h-4 w-4" />
-              New Appointment
+              <span className="hidden sm:inline">New Appointment</span>
+              <span className="sm:hidden">New</span>
             </Button>
           }
         />
@@ -209,10 +210,10 @@ export default function Appointments() {
         {/* Daily Statistics */}
         <AppointmentStats stats={todaysStats} selectedDate={date} />
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="lg:col-span-1 space-y-4 md:space-y-6">
             <Card className="animate-slideUp">
-              <CardContent className="p-4">
+              <CardContent className="p-3 md:p-4">
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -240,7 +241,7 @@ export default function Appointments() {
             </Card>
             
             <Card className="animate-slideUp animation-delay-100">
-              <CardContent className="p-4 space-y-4">
+              <CardContent className="p-3 md:p-4 space-y-4">
                 <div>
                   <h3 className="text-sm font-medium mb-2">Filter by Provider</h3>
                   <Select value={provider} onValueChange={setProvider}>
@@ -276,14 +277,15 @@ export default function Appointments() {
           
           <div className="lg:col-span-3">
             <Card className="animate-fadeIn animation-delay-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold flex items-center">
-                    <Calendar className="mr-2 h-5 w-5 text-medical-600" />
-                    Selected Day's Appointments
+              <CardContent className="p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                  <h2 className="text-lg md:text-xl font-semibold flex items-center">
+                    <Calendar className="mr-2 h-4 w-4 md:h-5 md:w-5 text-medical-600" />
+                    <span className="hidden sm:inline">Selected Day's Appointments</span>
+                    <span className="sm:hidden">Today's Schedule</span>
                   </h2>
                   <div className="text-sm text-muted-foreground">
-                    {filteredAppointments.length} appointments scheduled
+                    {filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''} scheduled
                   </div>
                 </div>
                 

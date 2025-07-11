@@ -68,17 +68,17 @@ export function NewAppointmentWizard({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="grid gap-4 py-4">
+      <div className="grid gap-3 md:gap-4 py-4">
         <Card 
           className="cursor-pointer hover:bg-accent/50 transition-colors" 
           onClick={() => setStep('existing-patient')}
         >
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center text-lg">
-              <Users className="mr-3 h-5 w-5 text-blue-600" />
+          <CardHeader className="p-4 md:pb-4">
+            <CardTitle className="flex items-center text-base md:text-lg">
+              <Users className="mr-2 md:mr-3 h-4 w-4 md:h-5 md:w-5 text-blue-600" />
               Select Existing Patient
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Choose from registered patients and schedule an appointment
             </CardDescription>
           </CardHeader>
@@ -88,12 +88,12 @@ export function NewAppointmentWizard({
           className="cursor-pointer hover:bg-accent/50 transition-colors" 
           onClick={() => setStep('new-patient')}
         >
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center text-lg">
-              <UserPlus className="mr-3 h-5 w-5 text-green-600" />
+          <CardHeader className="p-4 md:pb-4">
+            <CardTitle className="flex items-center text-base md:text-lg">
+              <UserPlus className="mr-2 md:mr-3 h-4 w-4 md:h-5 md:w-5 text-green-600" />
               Add New Patient & Schedule
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               Register a new patient and create their first appointment
             </CardDescription>
           </CardHeader>
@@ -104,7 +104,7 @@ export function NewAppointmentWizard({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         {step === 'selection' && <SelectionStep />}
 
         {step === 'existing-patient' && (

@@ -58,11 +58,11 @@ export function DetailedAppointmentList({
               isOngoing && "ring-2 ring-red-200 bg-red-50/30"
             )}
           >
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 {/* Time and Status */}
-                <div className="flex-shrink-0 text-center min-w-[100px]">
-                  <div className="text-xl font-bold text-blue-600">{appointment.time}</div>
+                <div className="flex-shrink-0 text-center sm:min-w-[100px] w-full sm:w-auto mb-4 sm:mb-0">
+                  <div className="text-lg md:text-xl font-bold text-blue-600">{appointment.time}</div>
                   <div className="text-sm text-muted-foreground">{appointment.duration}</div>
                   {isOngoing && (
                     <Badge variant="destructive" className="mt-2 text-xs">
@@ -73,24 +73,24 @@ export function DetailedAppointmentList({
                 </div>
 
                 {/* Patient Info */}
-                <div className="flex items-start gap-4 flex-1">
-                  <Avatar className="h-16 w-16">
+                <div className="flex items-start gap-3 md:gap-4 flex-1 w-full sm:w-auto">
+                  <Avatar className="h-12 w-12 md:h-16 md:w-16 flex-shrink-0">
                     <AvatarImage src={patient?.image} alt={appointment.patientName} />
-                    <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+                    <AvatarFallback className="text-sm md:text-lg">{initials}</AvatarFallback>
                   </Avatar>
 
                   <div className="flex-1 space-y-3">
                     {/* Patient Name and Basic Info */}
-                    <div className="flex items-start justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
                         <Link 
                           to={`/patients/${appointment.patientId}`}
-                          className="text-xl font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-2"
+                          className="text-lg md:text-xl font-semibold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-2"
                         >
-                          {appointment.patientName}
-                          <ExternalLink className="h-4 w-4" />
+                          <span className="truncate">{appointment.patientName}</span>
+                          <ExternalLink className="h-4 w-4 flex-shrink-0" />
                         </Link>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-1 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User className="h-4 w-4" />
                             {patient?.age} years • {patient?.gender}
@@ -99,12 +99,12 @@ export function DetailedAppointmentList({
                           {patient?.contactInfo?.phone && (
                             <span className="flex items-center gap-1">
                               <Phone className="h-4 w-4" />
-                              {patient.contactInfo.phone}
+                              <span className="truncate">{patient.contactInfo.phone}</span>
                             </span>
                           )}
                         </div>
                       </div>
-                      <StatusBadge status={appointment.status} />
+                      <StatusBadge status={appointment.status} className="self-start" />
                     </div>
 
                     {/* Appointment Details */}
@@ -139,7 +139,7 @@ export function DetailedAppointmentList({
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col gap-2 ml-4">
+                <div className="flex flex-row sm:flex-col gap-2 mt-4 sm:mt-0 sm:ml-4 w-full sm:w-auto">
                   {appointment.status === "pending" && (
                     <Button 
                       variant="outline" 
@@ -178,10 +178,11 @@ export function DetailedAppointmentList({
 
                   <Link
                     to={`/patients/${appointment.patientId}`}
-                    className="text-xs"
+                    className="text-xs flex-1 sm:flex-none"
                   >
                     <Button variant="ghost" size="sm" className="text-xs w-full">
-                      View Profile
+                      <span className="hidden sm:inline">View Profile</span>
+                      <span className="sm:hidden">Profile</span>
                     </Button>
                   </Link>
                 </div>

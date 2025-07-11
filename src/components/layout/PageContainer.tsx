@@ -2,6 +2,7 @@
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarProvider";
 import { Sidebar } from "./Sidebar";
+import { MobileHeader } from "./MobileHeader";
 
 interface PageContainerProps {
   children: React.ReactNode;
@@ -13,11 +14,13 @@ export function PageContainer({ children, className }: PageContainerProps) {
 
   return (
     <>
+      <MobileHeader />
       <Sidebar />
       <div 
         className={cn(
           "flex-1 transition-all duration-300 ease-in-out min-h-screen",
-          isOpen ? "ml-64" : "ml-20",
+          "pt-16 md:pt-0", // Add top padding for mobile header
+          isOpen ? "md:ml-64" : "md:ml-20",
           className
         )}
       >

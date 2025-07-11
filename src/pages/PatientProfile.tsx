@@ -391,12 +391,12 @@ export default function PatientProfile() {
           />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="lg:col-span-1 order-2 lg:order-1">
             <PatientInfoSidebar patient={patient} />
           </div>
           
-          <div className="lg:col-span-2 space-y-6 order-1 lg:order-2">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6 order-1 lg:order-2">
             <PatientSummary 
               patientId={id || ""}
               lastVisitDate={lastVisitDate}
@@ -412,13 +412,13 @@ export default function PatientProfile() {
               className="animate-fadeIn"
               onValueChange={setActiveTab}
             >
-              <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-6 w-full">
-                <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
-                <TabsTrigger value="visits" className="text-xs md:text-sm">Visits</TabsTrigger>
-                <TabsTrigger value="problems" className="text-xs md:text-sm">Problems</TabsTrigger>
-                <TabsTrigger value="medications" className="text-xs md:text-sm">Meds</TabsTrigger>
-                <TabsTrigger value="allergies" className="text-xs md:text-sm">Allergies</TabsTrigger>
-                <TabsTrigger value="labs" className="text-xs md:text-sm">Labs</TabsTrigger>
+              <TabsList className="grid grid-cols-3 md:grid-cols-6 mb-4 md:mb-6 w-full h-auto">
+                <TabsTrigger value="overview" className="text-xs md:text-sm p-2 md:p-3">Overview</TabsTrigger>
+                <TabsTrigger value="visits" className="text-xs md:text-sm p-2 md:p-3">Visits</TabsTrigger>
+                <TabsTrigger value="problems" className="text-xs md:text-sm p-2 md:p-3">Problems</TabsTrigger>
+                <TabsTrigger value="medications" className="text-xs md:text-sm p-2 md:p-3">Meds</TabsTrigger>
+                <TabsTrigger value="allergies" className="text-xs md:text-sm p-2 md:p-3">Allergies</TabsTrigger>
+                <TabsTrigger value="labs" className="text-xs md:text-sm p-2 md:p-3">Labs</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview">
