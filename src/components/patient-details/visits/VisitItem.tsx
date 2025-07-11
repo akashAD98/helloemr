@@ -8,7 +8,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronRight, Edit } from "lucide-react";
+import { ChevronDown, ChevronRight, Edit, Eye } from "lucide-react";
 import { Visit } from "@/types/visit";
 import { VisitSummaryTab } from "./VisitSummaryTab";
 import { VisitExamTab } from "./VisitExamTab";
@@ -20,9 +20,10 @@ interface VisitItemProps {
   isExpanded: boolean;
   onToggle: () => void;
   onEditVisit?: (visitId: string) => void;
+  onViewVisit?: () => void;
 }
 
-export function VisitItem({ visit, isExpanded, onToggle, onEditVisit }: VisitItemProps) {
+export function VisitItem({ visit, isExpanded, onToggle, onEditVisit, onViewVisit }: VisitItemProps) {
   const [activeTab, setActiveTab] = useState('summary');
 
   // Helper function to determine status badge type
@@ -65,14 +66,26 @@ export function VisitItem({ visit, isExpanded, onToggle, onEditVisit }: VisitIte
       </CollapsibleTrigger>
       
       <CollapsibleContent className="px-4 pb-4">
-        <div className="flex justify-end mb-2">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 mb-4">
+          {onViewVisit && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={onViewVisit}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">View Details</span>
+              <span className="sm:hidden">Details</span>
+            </Button>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => onEditVisit && onEditVisit(visit.id)}
           >
             <Edit className="h-4 w-4 mr-2" />
-            Edit Visit
+            <span className="hidden sm:inline">Edit Visit</span>
+            <span className="sm:hidden">Edit</span>
           </Button>
         </div>
         

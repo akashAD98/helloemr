@@ -70,6 +70,47 @@ export type Database = {
           },
         ]
       }
+      audio_transcriptions: {
+        Row: {
+          ai_summary: string | null
+          audio_url: string
+          created_at: string
+          id: string
+          processing_error: string | null
+          processing_status: string
+          transcript: string | null
+          visit_id: string
+        }
+        Insert: {
+          ai_summary?: string | null
+          audio_url: string
+          created_at?: string
+          id?: string
+          processing_error?: string | null
+          processing_status?: string
+          transcript?: string | null
+          visit_id: string
+        }
+        Update: {
+          ai_summary?: string | null
+          audio_url?: string
+          created_at?: string
+          id?: string
+          processing_error?: string | null
+          processing_status?: string
+          transcript?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_transcriptions_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "visits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           appointment_id: string | null
@@ -213,6 +254,72 @@ export type Database = {
           id?: string
           role?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      visits: {
+        Row: {
+          ai_generated_summary: string | null
+          audio_recording_url: string | null
+          created_at: string
+          created_by: string | null
+          documents: Json | null
+          exam_findings: Json | null
+          id: string
+          medications: Json | null
+          notes: string | null
+          patient_id: string
+          provider: string
+          reason: string
+          status: string
+          summary: string | null
+          transcript: string | null
+          updated_at: string
+          visit_date: string
+          visit_time: string
+          vital_signs: Json | null
+        }
+        Insert: {
+          ai_generated_summary?: string | null
+          audio_recording_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          documents?: Json | null
+          exam_findings?: Json | null
+          id?: string
+          medications?: Json | null
+          notes?: string | null
+          patient_id: string
+          provider: string
+          reason: string
+          status?: string
+          summary?: string | null
+          transcript?: string | null
+          updated_at?: string
+          visit_date: string
+          visit_time: string
+          vital_signs?: Json | null
+        }
+        Update: {
+          ai_generated_summary?: string | null
+          audio_recording_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          documents?: Json | null
+          exam_findings?: Json | null
+          id?: string
+          medications?: Json | null
+          notes?: string | null
+          patient_id?: string
+          provider?: string
+          reason?: string
+          status?: string
+          summary?: string | null
+          transcript?: string | null
+          updated_at?: string
+          visit_date?: string
+          visit_time?: string
+          vital_signs?: Json | null
         }
         Relationships: []
       }

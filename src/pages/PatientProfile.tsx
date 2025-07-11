@@ -437,7 +437,8 @@ export default function PatientProfile() {
               
               <TabsContent value="visits">
                 <VisitsTab 
-                  visits={visits} 
+                  visits={visits}
+                  patientId={id || ""}
                   onAddVisit={handleAddVisit} 
                   onEditVisit={handleEditVisit}
                 />

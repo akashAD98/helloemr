@@ -8,6 +8,7 @@ interface UseAudioRecordingReturn {
   startRecording: () => Promise<void>;
   stopRecording: () => void;
   playAudio: () => void;
+  clearRecording: () => void;
 }
 
 export function useAudioRecording(): UseAudioRecordingReturn {
@@ -79,6 +80,15 @@ export function useAudioRecording(): UseAudioRecordingReturn {
       audio.play();
     }
   };
+
+  const clearRecording = () => {
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioUrl(null);
+    setAudioBlob(null);
+    setRecordingTime(0);
+  };
   
   return {
     isRecording,
@@ -87,6 +97,7 @@ export function useAudioRecording(): UseAudioRecordingReturn {
     recordingTime,
     startRecording,
     stopRecording,
-    playAudio
+    playAudio,
+    clearRecording
   };
 }
