@@ -1,12 +1,19 @@
+import React, { createContext, useContext, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+interface User {
+  id: string;
+  email: string;
+  user_metadata?: {
+    full_name?: string;
+  };
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -20,97 +27,63 @@ export function useAuth() {
   return context;
 }
 
-// Clean up auth state utility
-const cleanupAuthState = () => {
-  // Remove all Supabase auth keys from localStorage
-  Object.keys(localStorage).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      localStorage.removeItem(key);
-    }
-  });
-  // Remove from sessionStorage if in use
-  Object.keys(sessionStorage || {}).forEach((key) => {
-    if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-      sessionStorage.removeItem(key);
-    }
-  });
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check for mock session first
-    const mockSession = localStorage.getItem('mock_auth_session');
-    if (mockSession) {
-      try {
-        const mockUser = JSON.parse(mockSession);
-        setUser(mockUser as User);
-        setSession({ user: mockUser } as Session);
-        setLoading(false);
-        return;
-      } catch (error) {
-        console.error('Error parsing mock session:', error);
-        localStorage.removeItem('mock_auth_session');
+  const signIn = async (email: string, password: string) => {
+    // Mock sign in - always successful for demo
+    const mockUser: User = {
+      id: 'mock-user-id',
+      email,
+      user_metadata: {
+        full_name: 'Demo User'
       }
-    }
+    };
+    setUser(mockUser);
+    localStorage.setItem('mock_auth_user', JSON.stringify(mockUser));
+    return { error: null };
+  };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Handle different auth events
-        if (event === 'SIGNED_IN' && session) {
-          console.log('User signed in successfully');
-          // Remove mock session if real session is established
-          localStorage.removeItem('mock_auth_session');
-        } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
-          cleanupAuthState();
-          localStorage.removeItem('mock_auth_session');
-        }
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    // Mock sign up - always successful for demo
+    const mockUser: User = {
+      id: 'mock-user-id',
+      email,
+      user_metadata: {
+        full_name: fullName || 'Demo User'
       }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
-      if (!mockSession) {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    };
+    setUser(mockUser);
+    localStorage.setItem('mock_auth_user', JSON.stringify(mockUser));
+    return { error: null };
+  };
 
   const signOut = async () => {
-    try {
-      // Remove mock session
-      localStorage.removeItem('mock_auth_session');
-      cleanupAuthState();
-      const { error } = await supabase.auth.signOut({ scope: 'global' });
-      if (error) {
-        console.error('Error signing out:', error);
-      }
-      // Force page refresh to clear all state
-      window.location.href = '/auth';
-    } catch (error) {
-      console.error('Unexpected error during sign out:', error);
-    }
+    setUser(null);
+    localStorage.removeItem('mock_auth_user');
+    navigate('/auth');
   };
+
+  // Check for existing session on mount
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem('mock_auth_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        localStorage.removeItem('mock_auth_user');
+      }
+    }
+  }, []);
 
   const value = {
     user,
-    session,
     loading,
+    signIn,
+    signUp,
     signOut,
   };
 

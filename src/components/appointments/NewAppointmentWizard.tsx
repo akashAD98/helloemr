@@ -12,8 +12,8 @@ import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/ca
 import { UserPlus, Users } from "lucide-react";
 import { AppointmentFormDialog } from "./AppointmentFormDialog";
 import { NewPatientAppointmentForm } from "./NewPatientAppointmentForm";
-import { supabaseDataStore } from "@/lib/supabaseDataStore";
 import { toast } from "sonner";
+import { dataStore } from "@/lib/dataStore";
 
 interface NewAppointmentWizardProps {
   open: boolean;
@@ -43,16 +43,13 @@ export function NewAppointmentWizard({
 
   const handleAppointmentSubmit = async (data: any) => {
     try {
-      // Save to Supabase
-      const newAppointment = await supabaseDataStore.addAppointment(data);
+      // Save to local storage
+      dataStore.addAppointment(data);
+      const newAppointment = { ...data, id: Date.now().toString() };
       
-      if (newAppointment) {
-        onSubmit(newAppointment);
-        toast.success('Appointment created successfully');
-        resetWizard();
-      } else {
-        toast.error('Failed to create appointment');
-      }
+      onSubmit(newAppointment);
+      toast.success('Appointment created successfully');
+      resetWizard();
     } catch (error) {
       console.error('Error creating appointment:', error);
       toast.error('Failed to create appointment');

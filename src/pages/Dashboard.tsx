@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PatientCard } from "@/components/common/PatientCard";
 import { TaskCard } from "@/components/common/TaskCard";
 import { PlusCircle, Users, CheckCircle, Clock, Calendar, Activity, Bell, RefreshCw, LogOut } from "lucide-react";
-import { supabaseDataStore } from "@/lib/supabaseDataStore";
-import { realtimeNotificationService } from "@/services/realtimeNotificationService";
+import { dataStore } from "@/lib/dataStore";
 import { tasks } from "@/data/mockData";
 import { Patient } from "@/types/patient";
 import { Appointment } from "@/data/mockData";
@@ -21,45 +20,22 @@ export default function Dashboard() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState<any[]>([]);
   const { user, signOut } = useAuth();
 
   useEffect(() => {
     loadDashboardData();
-    
-    // Setup real-time subscriptions
-    const setupRealtimeSubscriptions = () => {
-      // Initialize the notification service
-      realtimeNotificationService.initialize();
-
-      // Setup data store subscriptions
-      supabaseDataStore.subscribeToChanges(() => {
-        loadDashboardData();
-      });
-    };
-
-    setupRealtimeSubscriptions();
-
-    return () => {
-      // Cleanup subscriptions on component unmount
-      realtimeNotificationService.cleanup();
-    };
   }, []);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      await supabaseDataStore.initialize();
-      
-      const [patientsData, appointmentsData, notificationsData] = await Promise.all([
-        supabaseDataStore.getPatients(),
-        supabaseDataStore.getAppointments(),
-        realtimeNotificationService.getUserNotifications()
+      const [patientsData, appointmentsData] = await Promise.all([
+        dataStore.getPatients(),
+        dataStore.getAppointments()
       ]);
       
       setPatients(patientsData);
       setAppointments(appointmentsData);
-      setNotifications(notificationsData);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -69,7 +45,6 @@ export default function Dashboard() {
   };
 
   const handleRefresh = async () => {
-    await supabaseDataStore.refresh();
     await loadDashboardData();
     toast.success("Dashboard refreshed");
   };
@@ -118,7 +93,6 @@ export default function Dashboard() {
   const recentPatients = patients.slice(0, 3);
   const pendingTasks = tasks.filter(task => task.status === "pending");
   const overdueTasks = tasks.filter(task => task.status === "overdue");
-  const unreadNotifications = notifications.filter(n => !n.read_at);
 
   const userName = user?.user_metadata?.full_name || user?.email || "Doctor";
 
@@ -146,26 +120,6 @@ export default function Dashboard() {
             </div>
           }
         />
-
-        {unreadNotifications.length > 0 && (
-          <Card className="border-orange-200 bg-orange-50">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center text-orange-800 text-base md:text-lg">
-                <Bell className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                <span className="hidden sm:inline">New Notifications ({unreadNotifications.length})</span>
-                <span className="sm:hidden">Notifications ({unreadNotifications.length})</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {unreadNotifications.slice(0, 3).map((notification) => (
-                <div key={notification.id} className="p-2 bg-white rounded border">
-                  <p className="font-medium text-sm">{notification.title}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
 
         {/* Today's Appointment Statistics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
@@ -262,7 +216,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
               <div className="text-2xl md:text-3xl font-bold">{patients.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">Real-time count</p>
+              <p className="text-xs text-muted-foreground mt-1">Current count</p>
             </CardContent>
           </Card>
           
@@ -396,7 +350,7 @@ export default function Dashboard() {
                   <CardTitle>Recent Patients</CardTitle>
                   <CardDescription>All your recently accessed patients</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-4">
                   {patients.map(patient => (
                     <PatientCard
                       key={patient.id}
@@ -410,7 +364,7 @@ export default function Dashboard() {
                   ))}
                   
                   {patients.length === 0 && (
-                    <p className="col-span-2 text-center text-muted-foreground py-4">No patients found</p>
+                    <p className="text-center text-muted-foreground py-4">No patients available</p>
                   )}
                 </CardContent>
               </Card>

@@ -8,7 +8,6 @@ import { VisitItem } from "./visits/VisitItem";
 import { EmptyVisits } from "./visits/EmptyVisits";
 import { NewVisitDialog } from "./visits/NewVisitDialog";
 import { VisitDetailsDialog } from "./visits/VisitDetailsDialog";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // Re-export the Visit type for backwards compatibility
@@ -37,20 +36,12 @@ export function VisitsTab({ visits: initialVisits, onAddVisit, onEditVisit, pati
   const loadVisits = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('visits')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('visit_date', { ascending: false })
-        .order('visit_time', { ascending: false });
-
-      if (error) throw error;
-
-      setVisits(data || []);
+      // Mock data for demo purposes
+      const mockVisits = initialVisits || [];
+      setVisits(mockVisits);
     } catch (error) {
       console.error('Error loading visits:', error);
       toast.error('Failed to load visits');
-      // Fallback to initial visits if provided
       setVisits(initialVisits || []);
     } finally {
       setLoading(false);

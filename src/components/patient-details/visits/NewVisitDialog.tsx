@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAudioRecording } from "../audio-notes/useAudioRecording";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+// Removed Supabase import
 
 interface NewVisitDialogProps {
   open: boolean;
@@ -67,9 +67,9 @@ export function NewVisitDialog({
 
     setIsSubmitting(true);
     try {
-      const { data: user } = await supabase.auth.getUser();
-      
+      // Mock visit creation
       const visitData = {
+        id: Date.now().toString(),
         patient_id: patientId,
         visit_date: format(date, "yyyy-MM-dd"),
         visit_time: time,
@@ -77,18 +77,10 @@ export function NewVisitDialog({
         provider,
         status,
         notes,
-        created_by: user.user?.id
+        created_by: 'mock-user-id'
       };
 
-      const { data: visit, error } = await supabase
-        .from('visits')
-        .insert(visitData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setVisitId(visit.id);
+      setVisitId(visitData.id);
       toast.success("Visit started successfully! You can now record audio notes.");
       
       // Don't close dialog yet - allow audio recording
@@ -136,36 +128,27 @@ export function NewVisitDialog({
       
       const base64Audio = btoa(binary);
 
-      // Send to transcription service
-      const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-        body: {
-          audio: base64Audio,
-          visitId: visitId
-        }
-      });
+      // Mock transcription processing
+      setTimeout(() => {
+        const mockVisit = {
+          id: visitId,
+          patient_id: patientId,
+          visit_date: format(date, "yyyy-MM-dd"),
+          visit_time: time,
+          reason,
+          provider,
+          status: 'completed',
+          notes: notes + '\n\n[Mock Transcript]: Patient discussed symptoms and treatment plan.',
+          transcript: 'Mock audio transcript generated.',
+          ai_generated_summary: 'Mock AI summary of the visit.'
+        };
 
-      if (error) throw error;
-
-      if (data.success) {
         toast.success("Audio processed and visit updated with transcript and summary!");
-        
-        // Refresh the visit data
-        const { data: updatedVisit } = await supabase
-          .from('visits')
-          .select('*')
-          .eq('id', visitId)
-          .single();
-
-        if (updatedVisit) {
-          onVisitCreated(updatedVisit);
-        }
-        
+        onVisitCreated(mockVisit);
         clearRecording();
         onOpenChange(false);
         resetForm();
-      } else {
-        throw new Error(data.error || 'Failed to process audio');
-      }
+      }, 2000);
     } catch (error) {
       console.error('Error processing audio:', error);
       toast.error("Failed to process audio: " + error.message);
@@ -182,27 +165,19 @@ export function NewVisitDialog({
     }
 
     try {
-      const { error } = await supabase
-        .from('visits')
-        .update({ 
-          status: 'completed',
-          notes: notes
-        })
-        .eq('id', visitId);
+      // Mock visit completion
+      const mockVisit = {
+        id: visitId,
+        patient_id: patientId,
+        visit_date: format(date, "yyyy-MM-dd"),
+        visit_time: time,
+        reason,
+        provider,
+        status: 'completed',
+        notes: notes
+      };
 
-      if (error) throw error;
-
-      // Get the updated visit
-      const { data: updatedVisit } = await supabase
-        .from('visits')
-        .select('*')
-        .eq('id', visitId)
-        .single();
-
-      if (updatedVisit) {
-        onVisitCreated(updatedVisit);
-      }
-
+      onVisitCreated(mockVisit);
       toast.success("Visit completed successfully!");
       onOpenChange(false);
       resetForm();

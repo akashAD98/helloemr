@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -15,10 +14,9 @@ import {
 } from "@/components/ui/table";
 import { PatientCard } from "@/components/common/PatientCard";
 import { PlusCircle, Search, RefreshCw } from "lucide-react";
-import { supabaseDataStore } from "@/lib/supabaseDataStore";
+import { dataStore } from "@/lib/dataStore";
 import { Patient } from "@/types/patient";
 import { toast } from "sonner";
-import { patients as mockPatients } from "@/data/mockData";
 
 export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,54 +32,19 @@ export default function Patients() {
   const loadPatients = async () => {
     try {
       setLoading(true);
-      console.log('Loading patients from Supabase...');
-      await supabaseDataStore.initialize();
-      const supabasePatients = await supabaseDataStore.getPatients();
-      console.log('Supabase patients:', supabasePatients);
-      
-      // If no patients in Supabase, use mock data as fallback
-      if (supabasePatients.length === 0) {
-        console.log('No patients in Supabase, using mock data:', mockPatients);
-        setPatients(mockPatients);
-        toast.info('Using demo patient data. Click "Import Demo Data" to save to database.');
-      } else {
-        setPatients(supabasePatients);
-      }
+      const patientsData = await dataStore.getPatients();
+      setPatients(patientsData);
     } catch (error) {
       console.error('Error loading patients:', error);
-      console.log('Falling back to mock data due to error');
-      setPatients(mockPatients);
-      toast.error('Failed to load patients from database, showing demo data');
+      toast.error('Failed to load patients');
     } finally {
       setLoading(false);
     }
   };
 
   const handleRefresh = async () => {
-    await supabaseDataStore.refresh();
     await loadPatients();
     toast.success("Patients refreshed");
-  };
-
-  const handleImportDemoData = async () => {
-    try {
-      setLoading(true);
-      console.log('Importing demo data to Supabase...');
-      
-      for (const patient of mockPatients) {
-        const patientName = patient.name || 'Unknown Patient';
-        console.log('Adding patient:', patientName);
-        await supabaseDataStore.addPatient(patient);
-      }
-      
-      toast.success('Demo data imported successfully!');
-      await loadPatients(); // Reload to show the imported data
-    } catch (error) {
-      console.error('Error importing demo data:', error);
-      toast.error('Failed to import demo data');
-    } finally {
-      setLoading(false);
-    }
   };
   
   const filteredPatients = patients.filter(patient => 
@@ -106,13 +69,6 @@ export default function Patients() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </Button>
-              {patients.length === 0 || patients === mockPatients ? (
-                <Button variant="outline" onClick={handleImportDemoData} disabled={loading} size="sm">
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  <span className="hidden sm:inline">Import Demo Data</span>
-                  <span className="sm:hidden">Import</span>
-                </Button>
-              ) : null}
               <Button onClick={handleNewPatient} size="sm">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">New Patient</span>
