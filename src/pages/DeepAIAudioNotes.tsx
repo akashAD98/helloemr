@@ -276,13 +276,6 @@ export default function DeepAIAudioNotes() {
             </Card>
           </div>
         </div>
-
-        <DeepAIAudioForm
-          patientId={"patientId"}
-          onSaveNote={(note) => {
-            // handle the saved note, e.g., show a toast or update state
-          }}
-        />
       </div>
     </PageContainer>
   );
