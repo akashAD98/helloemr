@@ -98,152 +98,155 @@ export default function Dashboard() {
 
   return (
     <PageContainer>
-      <div className="p-6 space-y-6">
+      <div className="responsive-p responsive-gap space-y-4 sm:space-y-6">
         <PageHeader 
           title="Dashboard" 
           description={`Welcome back, ${userName}`}
           actions={
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={handleRefresh} disabled={loading} size="sm">
+            <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={handleRefresh} disabled={loading} className="touch-button w-full xs:w-auto">
                 <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
+                <span className="sm:hidden">Refresh</span>
               </Button>
-              <Button variant="outline" onClick={handleSignOut} size="sm">
+              <Button variant="outline" onClick={handleSignOut} className="touch-button w-full xs:w-auto">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Sign Out</span>
+                <span className="sm:hidden">Sign Out</span>
               </Button>
-              <Button size="sm">
+              <Button className="touch-button w-full xs:w-auto">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">New Patient</span>
-                <span className="sm:hidden">New</span>
+                <span className="sm:hidden">New Patient</span>
               </Button>
             </div>
           }
         />
 
         {/* Today's Appointment Statistics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="grid grid-responsive-4 responsive-gap-sm">
           <Card className="animate-slideUp">
-            <CardHeader className="pb-2 p-3 md:p-6">
-              <CardTitle className="text-sm md:text-lg flex items-center">
-                <Calendar className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                <span className="hidden sm:inline">Today's Appointments</span>
-                <span className="sm:hidden">Today</span>
+            <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                <span className="hidden xs:inline">Today's Appointments</span>
+                <span className="xs:hidden">Today</span>
               </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
+              <CardDescription className="text-xs sm:text-sm">
                 <span className="hidden sm:inline">Total scheduled for today</span>
                 <span className="sm:hidden">Scheduled</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600">{appointmentStats.total}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
+              <div className="responsive-text-xl font-bold text-blue-600">{appointmentStats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="hidden md:inline">{format(new Date(), "EEEE, MMM d")}</span>
-                <span className="md:hidden">{format(new Date(), "MMM d")}</span>
+                <span className="hidden sm:inline">{format(new Date(), "EEEE, MMM d")}</span>
+                <span className="sm:hidden">{format(new Date(), "MMM d")}</span>
               </p>
             </CardContent>
           </Card>
 
           <Card className="animate-slideUp animation-delay-75">
-            <CardHeader className="pb-2 p-3 md:p-6">
-              <CardTitle className="text-sm md:text-lg flex items-center">
-                <Clock className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5 text-yellow-600" />
+            <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
                 <span>Pending</span>
               </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
+              <CardDescription className="text-xs sm:text-sm">
                 <span className="hidden sm:inline">Awaiting confirmation</span>
                 <span className="sm:hidden">Awaiting</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold text-yellow-600">{appointmentStats.pending}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
+              <div className="responsive-text-xl font-bold text-yellow-600">{appointmentStats.pending}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="hidden md:inline">Need to confirm</span>
-                <span className="md:hidden">To confirm</span>
+                <span className="hidden sm:inline">Need to confirm</span>
+                <span className="sm:hidden">To confirm</span>
               </p>
             </CardContent>
           </Card>
 
           <Card className="animate-slideUp animation-delay-150">
-            <CardHeader className="pb-2 p-3 md:p-6">
-              <CardTitle className="text-sm md:text-lg flex items-center">
-                <CheckCircle className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5 text-green-600" />
+            <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                 <span>Completed</span>
               </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
+              <CardDescription className="text-xs sm:text-sm">
                 <span className="hidden sm:inline">Finished appointments</span>
                 <span className="sm:hidden">Finished</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold text-green-600">{appointmentStats.completed}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
+              <div className="responsive-text-xl font-bold text-green-600">{appointmentStats.completed}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="hidden md:inline">Successfully done</span>
+                <span className="hidden sm:inline">Successfully done</span>
                 <span className="sm:hidden">Done</span>
               </p>
             </CardContent>
           </Card>
 
           <Card className="animate-slideUp animation-delay-225">
-            <CardHeader className="pb-2 p-3 md:p-6">
-              <CardTitle className="text-sm md:text-lg flex items-center">
-                <Activity className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5 text-red-600" />
+            <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
                 <span>Ongoing</span>
               </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
+              <CardDescription className="text-xs sm:text-sm">
                 <span className="hidden sm:inline">Currently in progress</span>
                 <span className="sm:hidden">Active</span>
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold text-red-600">{appointmentStats.ongoing}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
+              <div className="responsive-text-xl font-bold text-red-600">{appointmentStats.ongoing}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                <span className="hidden md:inline">Active now</span>
-                <span className="md:hidden">Now</span>
+                <span className="hidden sm:inline">Active now</span>
+                <span className="sm:hidden">Now</span>
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-responsive-3 responsive-gap">
           <Card className="animate-slideUp">
-            <CardHeader className="pb-2 p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg flex items-center">
-                <Users className="mr-2 h-4 w-4 md:h-5 md:w-5 text-medical-600" />
-                Active Patients
+            <CardHeader className="pb-2 responsive-p">
+              <CardTitle className="responsive-text-sm flex items-center gap-2">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+                <span>Active Patients</span>
               </CardTitle>
-              <CardDescription className="text-sm">Total active patients</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Total active patients</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold">{patients.length}</div>
+            <CardContent className="responsive-p pt-0">
+              <div className="responsive-text-xl font-bold">{patients.length}</div>
               <p className="text-xs text-muted-foreground mt-1">Current count</p>
             </CardContent>
           </Card>
           
           <Card className="animate-slideUp animation-delay-100">
-            <CardHeader className="pb-2 p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg flex items-center">
-                <CheckCircle className="mr-2 h-4 w-4 md:h-5 md:w-5 text-medical-600" />
-                Completed Tasks
+            <CardHeader className="pb-2 responsive-p">
+              <CardTitle className="responsive-text-sm flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+                <span>Completed Tasks</span>
               </CardTitle>
-              <CardDescription className="text-sm">Tasks completed today</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Tasks completed today</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-              <div className="text-2xl md:text-3xl font-bold">16</div>
+            <CardContent className="responsive-p pt-0">
+              <div className="responsive-text-xl font-bold">16</div>
               <p className="text-xs text-muted-foreground mt-1">78% of daily tasks</p>
             </CardContent>
           </Card>
           
           <Card className="animate-slideUp animation-delay-200">
-            <CardHeader className="pb-2 p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg flex items-center">
-                <Clock className="mr-2 h-4 w-4 md:h-5 md:w-5 text-medical-600" />
-                Next Appointment
+            <CardHeader className="pb-2 responsive-p">
+              <CardTitle className="responsive-text-sm flex items-center gap-2">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+                <span className="hidden sm:inline">Next Appointment</span>
+                <span className="sm:hidden">Next</span>
               </CardTitle>
-              <CardDescription className="text-sm">Coming up next</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Coming up next</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-              <div className="text-lg md:text-3xl font-bold truncate">
+            <CardContent className="responsive-p pt-0">
+              <div className="responsive-text-lg font-bold truncate">
                 {todaysAppointments.length > 0 ? todaysAppointments[0]?.time || "None" : "None"}
               </div>
               <p className="text-xs text-muted-foreground mt-1 truncate">
@@ -265,8 +268,8 @@ export default function Dashboard() {
               <TabsTrigger value="tasks" onClick={() => setActiveTab("tasks")}>Tasks</TabsTrigger>
               <TabsTrigger value="patients" onClick={() => setActiveTab("patients")}>Patients</TabsTrigger>
             </TabsList>
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid grid-responsive-2 responsive-gap">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Recent Patients</CardTitle>

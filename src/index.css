@@ -107,6 +107,43 @@
   .animation-delay-300 {
     animation-delay: 300ms;
   }
+  
+  /* Responsive text sizing */
+  .responsive-text-xs { @apply text-xs sm:text-sm md:text-base; }
+  .responsive-text-sm { @apply text-sm sm:text-base md:text-lg; }
+  .responsive-text-base { @apply text-base sm:text-lg md:text-xl; }
+  .responsive-text-lg { @apply text-lg sm:text-xl md:text-2xl; }
+  .responsive-text-xl { @apply text-xl sm:text-2xl md:text-3xl; }
+  .responsive-text-2xl { @apply text-2xl sm:text-3xl md:text-4xl; }
+  
+  /* Responsive spacing */
+  .responsive-p { @apply p-3 sm:p-4 md:p-6 lg:p-8; }
+  .responsive-px { @apply px-3 sm:px-4 md:px-6 lg:px-8; }
+  .responsive-py { @apply py-3 sm:py-4 md:py-6 lg:py-8; }
+  .responsive-m { @apply m-3 sm:m-4 md:m-6 lg:m-8; }
+  .responsive-mx { @apply mx-3 sm:mx-4 md:mx-6 lg:mx-8; }
+  .responsive-my { @apply my-3 sm:my-4 md:my-6 lg:my-8; }
+  
+  /* Responsive gaps */
+  .responsive-gap { @apply gap-3 sm:gap-4 md:gap-6 lg:gap-8; }
+  .responsive-gap-sm { @apply gap-2 sm:gap-3 md:gap-4 lg:gap-6; }
+  
+  /* Mobile-first grid utilities */
+  .grid-responsive-1 { @apply grid-cols-1; }
+  .grid-responsive-2 { @apply grid-cols-1 sm:grid-cols-2; }
+  .grid-responsive-3 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
+  .grid-responsive-4 { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4; }
+  .grid-responsive-auto { @apply grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5; }
+  
+  /* Touch-friendly sizes */
+  .touch-target { @apply min-h-[44px] min-w-[44px]; }
+  .touch-button { @apply h-12 px-6 text-base; }
+  
+  /* Safe area support for mobile devices */
+  .safe-area-top { padding-top: env(safe-area-inset-top); }
+  .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-area-left { padding-left: env(safe-area-inset-left); }
+  .safe-area-right { padding-right: env(safe-area-inset-right); }
 }
 
 .status-badge {

@@ -50,7 +50,7 @@ export function Sidebar() {
       {/* Sidebar */}
       <div
         className={cn(
-          "h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 ease-in-out border-r border-border bg-white",
+          "h-screen fixed top-0 left-0 z-40 flex flex-col transition-all duration-300 ease-in-out border-r border-border bg-white/95 backdrop-blur-sm safe-area-left safe-area-top safe-area-bottom",
           // Mobile: slide in/out, Desktop: resize
           "md:translate-x-0",
           isOpen 
@@ -71,7 +71,7 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={toggle}
-          className="rounded-full p-1.5 hover:bg-gray-100 transition-colors"
+          className="rounded-full p-1.5 hover:bg-gray-100 transition-colors touch-target"
         >
           {isOpen ? (
             <X className="h-4 w-4 md:hidden" />
@@ -181,7 +181,7 @@ function NavItem({ to, icon, label, isActive, isCollapsed }: NavItemProps) {
       to={to}
       onClick={handleClick}
       className={cn(
-        "flex items-center p-3 rounded-lg transition-all duration-300 group",
+        "flex items-center p-3 rounded-lg transition-all duration-300 group touch-target",
         isActive 
           ? "bg-medical-50 text-medical-700 border-r-2 border-medical-600" 
           : "text-gray-700 hover:bg-gray-100 hover:text-medical-600",
