@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { PageContainer } from "@/components/layout/PageContainer";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,8 +96,7 @@ export default function Dashboard() {
   const userName = user?.user_metadata?.full_name || user?.email || "Doctor";
 
   return (
-    <PageContainer>
-      <div className="responsive-p responsive-gap space-y-4 sm:space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-full overflow-x-hidden">
         <PageHeader 
           title="Dashboard" 
           description={`Welcome back, ${userName}`}
@@ -124,10 +122,10 @@ export default function Dashboard() {
         />
 
         {/* Today's Appointment Statistics */}
-        <div className="grid grid-responsive-4 responsive-gap-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="animate-slideUp">
             <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+              <CardTitle className="text-xs sm:text-sm md:text-base flex items-center gap-1 sm:gap-2">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
                 <span className="hidden xs:inline">Today's Appointments</span>
                 <span className="xs:hidden">Today</span>
@@ -138,7 +136,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
-              <div className="responsive-text-xl font-bold text-blue-600">{appointmentStats.total}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-600">{appointmentStats.total}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="hidden sm:inline">{format(new Date(), "EEEE, MMM d")}</span>
                 <span className="sm:hidden">{format(new Date(), "MMM d")}</span>
@@ -148,7 +146,7 @@ export default function Dashboard() {
 
           <Card className="animate-slideUp animation-delay-75">
             <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+              <CardTitle className="text-xs sm:text-sm md:text-base flex items-center gap-1 sm:gap-2">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
                 <span>Pending</span>
               </CardTitle>
@@ -158,7 +156,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
-              <div className="responsive-text-xl font-bold text-yellow-600">{appointmentStats.pending}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-yellow-600">{appointmentStats.pending}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="hidden sm:inline">Need to confirm</span>
                 <span className="sm:hidden">To confirm</span>
@@ -168,7 +166,7 @@ export default function Dashboard() {
 
           <Card className="animate-slideUp animation-delay-150">
             <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+              <CardTitle className="text-xs sm:text-sm md:text-base flex items-center gap-1 sm:gap-2">
                 <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 flex-shrink-0" />
                 <span>Completed</span>
               </CardTitle>
@@ -178,7 +176,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
-              <div className="responsive-text-xl font-bold text-green-600">{appointmentStats.completed}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{appointmentStats.completed}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="hidden sm:inline">Successfully done</span>
                 <span className="sm:hidden">Done</span>
@@ -188,7 +186,7 @@ export default function Dashboard() {
 
           <Card className="animate-slideUp animation-delay-225">
             <CardHeader className="pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="responsive-text-xs flex items-center gap-1 sm:gap-2">
+              <CardTitle className="text-xs sm:text-sm md:text-base flex items-center gap-1 sm:gap-2">
                 <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 flex-shrink-0" />
                 <span>Ongoing</span>
               </CardTitle>
@@ -198,7 +196,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-3 pt-0 sm:p-4 md:p-6 md:pt-0">
-              <div className="responsive-text-xl font-bold text-red-600">{appointmentStats.ongoing}</div>
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold text-red-600">{appointmentStats.ongoing}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 <span className="hidden sm:inline">Active now</span>
                 <span className="sm:hidden">Now</span>
@@ -207,46 +205,46 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-responsive-3 responsive-gap">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Card className="animate-slideUp">
-            <CardHeader className="pb-2 responsive-p">
-              <CardTitle className="responsive-text-sm flex items-center gap-2">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-sm sm:text-base md:text-lg flex items-center gap-2">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                 <span>Active Patients</span>
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">Total active patients</CardDescription>
             </CardHeader>
-            <CardContent className="responsive-p pt-0">
-              <div className="responsive-text-xl font-bold">{patients.length}</div>
+            <CardContent className="p-4 pt-0">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold">{patients.length}</div>
               <p className="text-xs text-muted-foreground mt-1">Current count</p>
             </CardContent>
           </Card>
           
           <Card className="animate-slideUp animation-delay-100">
-            <CardHeader className="pb-2 responsive-p">
-              <CardTitle className="responsive-text-sm flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-sm sm:text-base md:text-lg flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                 <span>Completed Tasks</span>
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">Tasks completed today</CardDescription>
             </CardHeader>
-            <CardContent className="responsive-p pt-0">
-              <div className="responsive-text-xl font-bold">16</div>
+            <CardContent className="p-4 pt-0">
+              <div className="text-xl sm:text-2xl md:text-3xl font-bold">16</div>
               <p className="text-xs text-muted-foreground mt-1">78% of daily tasks</p>
             </CardContent>
           </Card>
           
           <Card className="animate-slideUp animation-delay-200">
-            <CardHeader className="pb-2 responsive-p">
-              <CardTitle className="responsive-text-sm flex items-center gap-2">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-medical-600 flex-shrink-0" />
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-sm sm:text-base md:text-lg flex items-center gap-2">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
                 <span className="hidden sm:inline">Next Appointment</span>
                 <span className="sm:hidden">Next</span>
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">Coming up next</CardDescription>
             </CardHeader>
-            <CardContent className="responsive-p pt-0">
-              <div className="responsive-text-lg font-bold truncate">
+            <CardContent className="p-4 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold truncate">
                 {todaysAppointments.length > 0 ? todaysAppointments[0]?.time || "None" : "None"}
               </div>
               <p className="text-xs text-muted-foreground mt-1 truncate">
@@ -269,7 +267,7 @@ export default function Dashboard() {
               <TabsTrigger value="patients" onClick={() => setActiveTab("patients")}>Patients</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-              <div className="grid grid-responsive-2 responsive-gap">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Recent Patients</CardTitle>
@@ -374,7 +372,6 @@ export default function Dashboard() {
             </TabsContent>
           </Tabs>
         )}
-      </div>
-    </PageContainer>
+    </div>
   );
 }
