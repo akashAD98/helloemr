@@ -31,10 +31,10 @@ function App() {
           <Route path="*" element={
             <ProtectedRoute>
               <SidebarProvider>
-                <div className="flex min-h-screen w-full overflow-hidden">
+                <div className="flex min-h-screen w-full">
                   <Sidebar />
                   <MobileHeader />
-                  <main className="flex-1 md:ml-20 pt-16 md:pt-0 min-w-0 safe-area-top safe-area-bottom">
+                  <main className="flex-1 md:ml-20 pt-16 md:pt-0 min-w-0 w-full">
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/patients" element={<Patients />} />

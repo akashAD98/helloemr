@@ -9,7 +9,7 @@ import { RiskDashboard } from "@/components/risk-engine/RiskDashboard";
 export default function AIAnalytics() {
   return (
     <PageContainer>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <PageHeader 
           title="AI Analytics & Assistant" 
           description="Advanced analytics, AI assistance, and predictive risk assessment"
