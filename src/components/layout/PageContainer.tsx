@@ -18,11 +18,13 @@ export function PageContainer({ children, className }: PageContainerProps) {
       <Sidebar />
       <div 
         className={cn(
-          "w-full min-w-0 overflow-x-hidden",
+          "flex-1 transition-all duration-300 ease-in-out min-h-screen w-full min-w-0",
+          "pt-16 md:pt-0 safe-area-bottom", // Add top padding for mobile header
+          isOpen ? "md:ml-64" : "md:ml-20",
           className
         )}
       >
-        <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div className="container mx-auto max-w-full overflow-x-hidden">
           {children}
         </div>
       </div>

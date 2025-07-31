@@ -31,11 +31,10 @@ function App() {
           <Route path="*" element={
             <ProtectedRoute>
               <SidebarProvider>
-                <div className="flex min-h-screen w-full overflow-x-hidden">
+                <div className="flex min-h-screen w-full overflow-hidden">
                   <Sidebar />
                   <MobileHeader />
-                  <main className="flex-1 w-full min-w-0 overflow-x-hidden">
-                    <div className="md:ml-20 pt-16 md:pt-0 min-h-screen safe-area-top safe-area-bottom w-full">
+                  <main className="flex-1 md:ml-20 pt-16 md:pt-0 min-w-0 safe-area-top safe-area-bottom">
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/patients" element={<Patients />} />
@@ -51,7 +50,6 @@ function App() {
                       <Route path="/settings" element={<Settings />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                    </div>
                   </main>
                   <Toaster />
                 </div>
